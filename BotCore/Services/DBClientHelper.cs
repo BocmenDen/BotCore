@@ -11,6 +11,7 @@ namespace BotCore.Services
         private readonly Func<TParametr, Task<TUser>> _createUser = default!;
         private readonly Func<TParametr, Task<TUser?>> _getUser = default!;
         private readonly Action? _disponse;
+        public readonly TDB Originaldatabase;
 
         public DBClientHelper(TDB? database = default, IFactory<TDB>? factory = null, IDBClientParametrConverter<TParametr>? converter = null)
         {
@@ -19,6 +20,7 @@ namespace BotCore.Services
                 database = factory.Create();
                 _disponse = database.Dispose;
             }
+            Originaldatabase=database!;
             if (database != null)
             {
                 if (database is IDBUser<TUser, TParametr> db)

@@ -8,21 +8,25 @@ using BotCore.Interfaces;
 using BotCore.Tg;
 using BotCore.Demo;
 using System.Reflection;
+using BotCore.OneBot;
 
 IHost host = BotBuilder.CreateDefaultBuilder()
-    .ConfigureAppConfiguration(app => app.AddInMemoryCollection([new(TgClient.KeySettingTOKEN, "ВАШ_ТОКЕН")]))
-    .RegisterDBContextOptions(b => b.UseSqlite("Data Source=database.db"))
+    .ConfigureAppConfiguration(app => app.AddUserSecrets(Assembly.GetExecutingAssembly()))
+    .RegisterDBContextOptions(b => b.UseSqlite($"Data Source={Path.GetRandomFileName()}.db"))
     .RegisterServices(
         Assembly.GetAssembly(typeof(Program)),
-        Assembly.GetAssembly(typeof(TgClient))
+        Assembly.GetAssembly(typeof(TgClient)),
+        Assembly.GetAssembly(typeof(CombineBots<,>))
     )
     .Build();
 
 IServiceProvider service = host.Services;
 
-var tgClient = service.GetRequiredService<TgClient<User, DataBase>>();
+var tgClient = service.GetRequiredService<TgClient<UserTg, DataBase>>();
+var combineUser = service.GetRequiredService<CombineBots<User, DataBase>>();
 var spamFilter = host.Services.GetRequiredService<MessageSpam<IUser>>();
-tgClient.Update += spamFilter.HandleCommand;
+tgClient.Update += combineUser.HandleNewUpdateContext;
+combineUser.NewUpdateContext += spamFilter.HandleCommand;
 
 spamFilter.Init(async (context) =>
 {

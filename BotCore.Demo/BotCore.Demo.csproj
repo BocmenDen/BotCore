@@ -5,6 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>2967c43f-2a7c-43e3-9100-0f1c89b08fb1</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BotCore.OneBot\BotCore.OneBot.csproj" />
     <ProjectReference Include="..\BotCore\BotCore.csproj" />
     <ProjectReference Include="..\BotCore.EfUserDb\BotCore.EfUserDb.csproj" />
     <ProjectReference Include="..\BotCore.SpamBroker\BotCore.SpamBroker.csproj" />
