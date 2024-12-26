@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using BotCore.EfUserDb;
+﻿using BotCore.EfUserDb;
 using BotCore.Interfaces;
-using Telegram.Bot.Types;
 using BotCore.OneBot;
+using Microsoft.EntityFrameworkCore;
+using Telegram.Bot.Types;
 
 namespace BotCore.Demo
 {
@@ -34,10 +34,9 @@ namespace BotCore.Demo
         {
             User user = new();
             var e2 = Users.Add(user);
-            await SaveChangesAsync();
             UsersRef userRef = new(parameter)
             {
-                Id = user.Id,
+                SharedUser = user
             };
             var e1 = UsersShared.Add(userRef);
             await SaveChangesAsync();

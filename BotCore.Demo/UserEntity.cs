@@ -7,6 +7,7 @@ using Telegram.Bot.Types;
 
 namespace BotCore.Demo
 {
+    [UserTypeName("Telegram")]
     public class UserTg : IUser, IUserTgExtension
     {
         [Key]

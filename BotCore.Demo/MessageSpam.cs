@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using BotCore.Attributes;
+﻿using BotCore.Attributes;
 using BotCore.Interfaces;
 using BotCore.SpamBroker;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace BotCore.Demo
 {

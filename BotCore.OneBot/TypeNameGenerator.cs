@@ -10,14 +10,14 @@ namespace BotCore.OneBot
 
         public TypeNameGenerator(TypeNameGeneratorOptions? generatorOptions = null)
         {
-            if(generatorOptions != null)
+            if (generatorOptions != null)
             {
                 _generator = generatorOptions.Generator;
                 return;
             }
             _generator = (type) =>
             {
-                var attr = type.GetCustomAttribute<UserTypeAttribute>();
+                var attr = type.GetCustomAttribute<UserTypeNameAttribute>();
                 if (attr != null)
                     return attr.TypeName;
                 return type.Name;

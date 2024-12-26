@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using BotCore.Attributes;
+﻿using BotCore.Attributes;
 using BotCore.Base;
 using BotCore.Interfaces;
 using BotCore.Models;
 using BotCore.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -22,9 +22,9 @@ namespace BotCore.Tg
         public readonly TelegramBotClient BotClient;
         private readonly ReceiverOptions? _receiverOptions;
         private EventId _eventId;
-        private readonly DBClientHelper<TUser, TDB, Chat> _database;
+        private readonly DBClientHelper<TUser, TDB, Chat, SingletonObjectProvider<TDB>> _database;
 
-        public TgClient(IConfiguration configuration, DBClientHelper<TUser, TDB, Chat> database, ILogger<TgClient<TUser, TDB>>? logger = null, ReceiverOptions? receiverOptions = null)
+        public TgClient(IConfiguration configuration, DBClientHelper<TUser, TDB, Chat, SingletonObjectProvider<TDB>> database, ILogger<TgClient<TUser, TDB>>? logger = null, ReceiverOptions? receiverOptions = null)
         {
             string token = configuration[TgClient.KeySettingTOKEN] ?? throw new Exception("Отсутствует токен для создания клиента Telegram");
             Id = token.GetHashCode();
@@ -123,12 +123,10 @@ namespace BotCore.Tg
         {
             var chatId = TgClient.GetChatId(update);
             if (chatId == null) return default;
-            var findUser = await _database.GetUser(chatId);
-            if (findUser != null)
-                return findUser;
-            findUser = await _database.CreateUser(chatId);
-            _logger?.LogInformation(_eventId, "Добавлен новый пользователь [{userTg}]", findUser);
-            return findUser;
+            var (user, isCreate) = await _database.GetOrCreate(chatId);
+            if (isCreate)
+                _logger?.LogInformation(_eventId, "Добавлен новый пользователь [{userTg}]", user);
+            return user;
         }
 
         public override ButtonSearch? GetIndexButton(UpdateModel update, ButtonsSend buttonsSend)

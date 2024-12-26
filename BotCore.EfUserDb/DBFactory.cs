@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using BotCore.Attributes;
-using BotCore.Interfaces;
+﻿using BotCore.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace BotCore.EfUserDb
 {
-    [Service(ServiceType.Singltone)]
     internal class DBFactory<DB>(IDbContextFactory<DB> originalFactory) : IFactory<DB>
         where DB : DbContext
     {

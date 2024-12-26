@@ -1,14 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BotCore;
+using BotCore.Demo;
+using BotCore.EfUserDb;
+using BotCore.Interfaces;
+using BotCore.OneBot;
+using BotCore.Tg;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using BotCore;
-using BotCore.EfUserDb;
-using BotCore.Interfaces;
-using BotCore.Tg;
-using BotCore.Demo;
 using System.Reflection;
-using BotCore.OneBot;
 
 IHost host = BotBuilder.CreateDefaultBuilder()
     .ConfigureAppConfiguration(app => app.AddUserSecrets(Assembly.GetExecutingAssembly()))

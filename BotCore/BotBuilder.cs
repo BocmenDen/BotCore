@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BotCore.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using BotCore.Attributes;
 using System.Reflection;
 
 namespace BotCore
@@ -23,8 +23,8 @@ namespace BotCore
                     parameters[2].ParameterType == typeof(Type) &&
                     parameters[3].ParameterType == typeof(Type))
                     yield return new(attr.ServiceName, (context, services, serviceType, implementationType) => method.Invoke(null, [context, services, serviceType, implementationType]));
-                yield break;
             }
+            yield break;
         }
 
         public static IHostBuilder CreateDefaultBuilder() => Host.CreateDefaultBuilder().RegisterServices(typeof(BotBuilder).Assembly);

@@ -3,46 +3,57 @@ using BotCore.Interfaces;
 
 namespace BotCore.Services
 {
-    [Service(ServiceType.Singltone)]
-    public class DBClientHelper<TUser, TDB, TParametr> : IDBUser<TUser, TParametr>
+    [Service(ServiceType.Transient)]
+    public class DBClientHelper<TUser, TDB, TParametr, TDBProvider> : IDBUser<TUser, TParametr>, IObjectProvider<TDB>
         where TUser : IUser
         where TDB : IDB
+        where TDBProvider : IObjectProvider<TDB>
     {
-        private readonly Func<TParametr, Task<TUser>> _createUser = default!;
-        private readonly Func<TParametr, Task<TUser?>> _getUser = default!;
-        private readonly Action? _disponse;
-        public readonly TDB Originaldatabase;
+        private readonly TDBProvider _dbProvider;
 
-        public DBClientHelper(TDB? database = default, IFactory<TDB>? factory = null, IDBClientParametrConverter<TParametr>? converter = null)
+        private readonly Func<TParametr, Task<TUser>> _createUser;
+        private readonly Func<TParametr, Task<TUser?>> _getUser;
+        private readonly Func<TParametr, Task<(TUser user, bool isCreate)>> _getOrCreate;
+        private readonly Action? _disponse;
+
+        public DBClientHelper(TDBProvider dbProvider, IDBClientParametrConverter<TParametr>? converter = null)
         {
-            if (factory != null)
+            _dbProvider = dbProvider;
+            if (dbProvider is IDisposable disposable) _disponse = () => disposable.Dispose();
+            if (dbProvider is IObjectProvider<IDBUser<TUser, TParametr>> castParametrDB)
             {
-                database = factory.Create();
-                _disponse = database.Dispose;
+                _createUser = (p) => castParametrDB.TakeObject((db) => db.CreateUser(p));
+                _getUser = (p) => castParametrDB.TakeObject((db) => db.GetUser(p));
+                _getOrCreate = (p) => castParametrDB.TakeObject(async (db) =>
+                {
+                    var user = await db.GetUser(p);
+                    bool isCreate = user == null;
+                    return (user ?? await db.CreateUser(p), isCreate);
+                });
+                return;
             }
-            Originaldatabase=database!;
-            if (database != null)
+            else if (dbProvider is IObjectProvider<IDBUser<TUser, long>> castDefaultDB && converter != null)
             {
-                if (database is IDBUser<TUser, TParametr> db)
+                _createUser = (p) => castDefaultDB.TakeObject((db) => db.CreateUser(converter.ParametrConvert(p)));
+                _getUser = (p) => castDefaultDB.TakeObject((db) => db.GetUser(converter.ParametrConvert(p)));
+                _getOrCreate = (p) => castDefaultDB.TakeObject(async (db) =>
                 {
-                    _getUser = db.GetUser!;
-                    _createUser = db.CreateUser;
-                    return;
-                }
-                else if (database is IDBUser<TUser, long> dbDefault)
-                {
-                    ArgumentNullException.ThrowIfNull(converter);
-                    _getUser = (p) => dbDefault.GetUser(converter.ParametrConvert(p));
-                    _createUser = (p) => dbDefault.CreateUser(converter.ParametrConvert(p));
-                    return;
-                }
+                    var id = converter.ParametrConvert(p);
+                    var user = await db.GetUser(id);
+                    bool isCreate = user == null;
+                    return (user ?? await db.CreateUser(id), isCreate);
+                });
+                return;
             }
-            throw new Exception("Не удалось найти необходимую БД");
+            throw new Exception("Не удалось найти подходящию БД");
         }
 
         public Task<TUser?> GetUser(TParametr parameter) => _getUser(parameter);
         public Task<TUser> CreateUser(TParametr parameter) => _createUser(parameter);
+        public Task<(TUser user, bool isCreate)> GetOrCreate(TParametr parameter) => _getOrCreate(parameter);
 
+        public void TakeObject(Action<TDB> func) => _dbProvider.TakeObject(func);
+        public T TakeObject<T>(Func<TDB, T> func) => _dbProvider.TakeObject(func);
         public void Dispose()
         {
             _disponse?.Invoke();

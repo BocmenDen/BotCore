@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using BotCore.Interfaces;
+﻿using BotCore.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace BotCore.SpamBroker
