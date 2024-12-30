@@ -13,7 +13,7 @@ namespace BotCore.Demo
         private readonly SingleMessageQueue<long, TUser> _singleMessageFilter;
         private readonly BlackList<TUser> _blackList;
         private readonly ILogger _logger;
-        private Func<IUpdateContext<TUser>, Task>? _action;
+        private Action<IUpdateContext<TUser>>? _action;
         private readonly TimeSpan _banTime;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Использовать основной конструктор", Justification = "Нужно бы завести таймер для автоочистки буфферов")]
@@ -40,7 +40,7 @@ namespace BotCore.Demo
             _banTime=configuration.GetValue<TimeSpan?>("spam_timeBan") ?? TimeSpan.FromMinutes(5);
         }
 
-        public void Init(Func<IUpdateContext<TUser>, Task> action)
+        public void Init(Action<IUpdateContext<TUser>> action)
         {
             _action = action;
         }
@@ -55,16 +55,16 @@ namespace BotCore.Demo
                 _blackList.AddBlock(updateData.User, _banTime);
             if (state.IsSpam()) return;
             _singleMessageFilter.RegisterEvent(updateData);
-            await HandleMessage(updateData);
+            HandleMessage(updateData);
             _singleMessageFilter.UnregisterEvent(updateData);
         }
 
-        private async Task HandleMessage(IUpdateContext<TUser> updateData)
+        private void HandleMessage(IUpdateContext<TUser> updateData)
         {
             if (_action == null) return;
             try
             {
-                await _action(updateData);
+                _action(updateData);
             }
             catch (Exception ex)
             {

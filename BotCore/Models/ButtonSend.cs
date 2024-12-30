@@ -12,11 +12,13 @@
         }
 
         public static implicit operator ButtonSend(string text) => new(text);
+
+        public override string ToString() => Text;
     }
     public readonly struct ButtonSearch(int row, int column, ButtonSend button)
     {
         public readonly int Column = column;
         public readonly int Row = row;
-        public readonly ButtonSend Button1 = button;
+        public readonly ButtonSend Button = button;
     }
 }
