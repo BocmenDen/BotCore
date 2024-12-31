@@ -16,8 +16,8 @@ namespace BotCore.FilterRouter.Utils
             if (method.IsGenericMethod) throw new Exception("Метод не может быть обобщенным");
             WriterExpression<TUser> writerExpression = new();
             LabelTarget skipOtherFilters = Expression.Label(typeof(EvaluatedAction), "skipOtherFilters");
-            ApplayFilters<TUser>(writerExpression, method, skipOtherFilters, out var resultFilter, out var valuesFilters);
-            var methodCall = ApplayArguments<TUser>(writerExpression, method, valuesFilters);
+            ApplayFilters(writerExpression, method, skipOtherFilters, out var resultFilter, out var valuesFilters);
+            var methodCall = ApplayArguments(writerExpression, method, valuesFilters);
             var methodFunc = CastMethodToFunction(writerExpression, method, methodCall);
             var result = Expression.New(
                 typeof(EvaluatedAction).GetConstructors()[0],
@@ -47,16 +47,27 @@ namespace BotCore.FilterRouter.Utils
             valuesFilters = [];
             resultFilter = Expression.Parameter(typeof(bool), "resultFilter");
             writerExpression.RegisterNoChacheParametr(resultFilter);
-            writerExpression.WriteBody(Expression.Assign(resultFilter, Expression.Constant(false)));
             var attributes = method.GetCustomAttributes<BaseFilterAttribute<TUser>>();
-            if (attributes == null || !attributes.Any()) return;
+            var noResultAttributes = attributes.Where(x => !x.IsReturnValue);
+            if (noResultAttributes.Any())
+            {
+                Expression combineFlags = Expression.Constant(false);
+                foreach (var filter in noResultAttributes)
+                    combineFlags = Expression.OrElse(combineFlags, filter.GetExpression(writerExpression));
+                writerExpression.WriteBody(Expression.Assign(resultFilter, combineFlags));
+                writerExpression.WriteBody(Expression.IfThen(resultFilter, Expression.Return(skipOtherFilters, Expression.Constant(new EvaluatedAction(true, null)))));
+            }
+            else
+            {
+                writerExpression.WriteBody(Expression.Assign(resultFilter, Expression.Constant(false)));
+            }
+            if (attributes == null || !attributes.Any())
+            {
+                writerExpression.WriteBody(Expression.Assign(resultFilter, Expression.Constant(false)));
+                return;
+            }
             ConstantExpression constantExitFalseExpressionLambda1 = Expression.Constant(false);
-            Expression<Action> test = () => Console.WriteLine("Hello, World!");
-            writerExpression.WriteBody(Expression.Call(
-                typeof(Debug).GetMethods().Where(x => x.Name == nameof(Debug.WriteLine) && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType == typeof(object)).First(),
-                writerExpression.ContextParametr
-                ));
-            foreach (ParameterExpression parameter in attributes.Select(x => x.GetExpression(writerExpression)))
+            foreach (ParameterExpression parameter in attributes.Where(x => x.IsReturnValue).Select(x => x.GetExpression(writerExpression)).Cast<ParameterExpression>())
             {
                 bool searchFlag = valuesFilters.Any(x => x == parameter);
                 valuesFilters.Add(parameter);

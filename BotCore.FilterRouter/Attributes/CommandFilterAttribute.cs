@@ -7,14 +7,15 @@ using System.Reflection;
 namespace BotCore.FilterRouter.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class CommandFilterAttribute<TUser>(bool isIgnoreCase, params string[] commands) : BaseFilterAttribute<TUser> where TUser : IUser
+    public class CommandFilterAttribute<TUser>(bool isIgnoreCase, params string[] commands) : BaseFilterAttribute<TUser>(true)
+        where TUser : IUser
     {
         private readonly string[] _commands = isIgnoreCase ? commands.Select(x => x.ToLower()).ToArray() : commands;
         private readonly bool _isIgnoreCase;
 
         public CommandFilterAttribute(params string[] commands) : this(false, commands) { }
 
-        public override ParameterExpression GetExpression(WriterExpression<TUser> writerExpression)
+        public override Expression GetExpression(WriterExpression<TUser> writerExpression)
         {
             MemberExpression originalCommand = writerExpression.GetUpdateCommand<TUser>();
             Expression commandExpression = originalCommand;

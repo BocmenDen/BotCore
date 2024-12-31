@@ -8,14 +8,14 @@ using System.Linq.Expressions;
 namespace BotCore.FilterRouter.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1) : BaseFilterAttribute<TUser>
+    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1) : BaseFilterAttribute<TUser>(true)
     where TUser : IUser
     {
         private readonly string _resourceKey = resourceKey;
         private readonly int? _row = row < 0 ? null : row;
         private readonly int? _column = column < 0 ? null : column;
 
-        public override ParameterExpression GetExpression(WriterExpression<TUser> writerExpression)
+        public override Expression GetExpression(WriterExpression<TUser> writerExpression)
         {
             var buttons = GetButtons(writerExpression);
             var resultSearch = GetSearchResult(writerExpression, buttons);
@@ -32,13 +32,13 @@ namespace BotCore.FilterRouter.Attributes
             {
                 ConstantExpression rowConst = Expression.Constant(_row, typeof(int));
                 MemberExpression rowMember = Expression.Field(Expression.Property(resultSearch, nameof(Nullable<ButtonSearch>.Value)), nameof(ButtonSearch.Row));
-                flag = Expression.Or(flag, Expression.NotEqual(rowConst, rowMember));
+                flag = Expression.OrElse(flag, Expression.NotEqual(rowConst, rowMember));
             }
             if (_column != null)
             {
                 ConstantExpression columnConst = Expression.Constant(_column, typeof(int));
                 MemberExpression columnMember = Expression.Field(Expression.Property(resultSearch, nameof(Nullable<ButtonSearch>.Value)), nameof(ButtonSearch.Column));
-                flag = Expression.Or(flag, Expression.NotEqual(columnConst, columnMember));
+                flag = Expression.OrElse(flag, Expression.NotEqual(columnConst, columnMember));
             }
             return flag;
         }

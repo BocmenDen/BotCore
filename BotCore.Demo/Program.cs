@@ -25,6 +25,7 @@ namespace BotCore.Demo
         readonly static ButtonsSend keyboard = new([["Мой GitHub", "Ссылка на этот проект"]]);
 
         [CommandFilter<User>("start")]
+        [MessageTypeFilter<User>(UpdateType.Command)]
         static async Task StartMessageHandler(IUpdateContext<User> context)
         {
             SendModel sendModel = "Привет!";
@@ -46,7 +47,7 @@ namespace BotCore.Demo
         {
             await context.Reply("https://github.com/BocmenDen?tab=repositories");
         }
-
+        
         [ButtonsFilter<User>("keyboard", 0, 1)]
         [FilterPriority(1)]
         static async Task KeyboardHendlerBotCoreProject(IUpdateContext<User> context)

@@ -58,33 +58,36 @@ namespace BotCore.FilterRouter.Extensions
         public static MemberExpression GetUpdateCommand<TUser>(this WriterExpression<TUser> writer)
             where TUser : IUser
         {
-            var exp = Expression.Property(writer.GetUpdateParametr<TUser>(), nameof(IUpdateContext<TUser>.Update.Command));
+            var exp = Expression.Property(writer.GetUpdateParametr(), nameof(IUpdateContext<TUser>.Update.Command));
+            writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            return exp;
+        }
+        public static MemberExpression GetUpdateType<TUser>(this WriterExpression<TUser> writer)
+            where TUser : IUser
+        {
+            var exp = Expression.Field(writer.GetUpdateParametr(), nameof(IUpdateContext<TUser>.Update.UpdateType));
             writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
             return exp;
         }
 
-        public static ParameterExpression CreateFilterResultParametrClass<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null)
+        public static ParameterExpression CreateFilterResultParametrClass<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? varableName = null)
             where T : class
             where TUser : IUser
         {
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T>).GetConstructor([typeof(bool), typeof(T)])??
                 throw new Exception("Constructor not found"), flag, value);
-            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T>));
+            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T>), varableName);
 
             return WriteFilterResultParametr(writer, key, newFilterResult, resultExpression);
         }
 
-        public static ParameterExpression CreateFilterResultParametrStruct<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null)
-            where T : struct
+        public static ParameterExpression CreateFilterResultParametrStruct<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? varableName = null)
+            where T: struct
             where TUser : IUser
         {
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T?>).GetConstructor([typeof(bool), typeof(T?)])??
                 throw new Exception("Constructor not found"), flag, value);
-            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T?>)
-#if DEBUG
-                , key != null ? key.Split("->").Last() : null
-#endif
-                );
+            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T?>), varableName);
             return WriteFilterResultParametr(writer, key, newFilterResult, resultExpression);
         }
 
@@ -112,7 +115,11 @@ namespace BotCore.FilterRouter.Extensions
             where TUser : IUser
         {
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
-            return writer.CreateFilterResultParametrClass<T, TUser>(value, flag, keyResult);
+            return writer.CreateFilterResultParametrClass<T, TUser>(value, flag, keyResult
+#if DEBUG
+                , $"{Path.GetFileName(file)}_{functionName}_{key}"
+#endif
+                );
         }
 
         public static ParameterExpression CreateFilterResultParametrStructAutoKey<T, TUser>(
@@ -128,7 +135,11 @@ namespace BotCore.FilterRouter.Extensions
             where TUser : IUser
         {
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
-            return writer.CreateFilterResultParametrStruct<T, TUser>(value, flag, keyResult);
+            return writer.CreateFilterResultParametrStruct<T, TUser>(value, flag, keyResult
+#if DEBUG
+                , $"{Path.GetFileName(file)}_{functionName}_{key}"
+#endif
+                );
         }
 
         private static bool TryGenerateKey(string? key, int lineMember, string? functionName, string? file, out string? keyResult)
