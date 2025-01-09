@@ -7,7 +7,7 @@ using System.Reflection;
 namespace BotCore.FilterRouter.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class CommandFilterAttribute<TUser>(bool isIgnoreCase, params string[] commands) : BaseFilterAttribute<TUser>(true)
+    public class CommandFilterAttribute<TUser>(bool isIgnoreCase, params string[] commands) : BaseFilterAttribute<TUser>(false)
         where TUser : IUser
     {
         private readonly string[] _commands = isIgnoreCase ? commands.Select(x => x.ToLower()).ToArray() : commands;
@@ -40,9 +40,7 @@ namespace BotCore.FilterRouter.Attributes
                 commandsConstant,
                 commandExpression
             );
-
-            ParameterExpression result = writerExpression.CreateFilterResultParametrClassAutoKey<string, TUser>(originalCommand, Expression.Not(containsMethod));
-            return result;
+            return Expression.Not(containsMethod);
         }
     }
 }

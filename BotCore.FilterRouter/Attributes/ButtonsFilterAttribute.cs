@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 namespace BotCore.FilterRouter.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1) : BaseFilterAttribute<TUser>(true)
+    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1, bool isReturnResult=true) : BaseFilterAttribute<TUser>(isReturnResult)
     where TUser : IUser
     {
         private readonly string _resourceKey = resourceKey;
@@ -20,9 +20,14 @@ namespace BotCore.FilterRouter.Attributes
             var buttons = GetButtons(writerExpression);
             var resultSearch = GetSearchResult(writerExpression, buttons);
             var conditionFlag = GetConditionFlag(resultSearch);
-            var result = writerExpression.CreateFilterResultParametrStructAutoKey<ButtonSearch, TUser>(resultSearch, conditionFlag, $"ResultButtonsFilter_{_resourceKey}_{_row}_{_column}");
-
-            return result;
+            var key = $"ResultButtonsFilter_{_resourceKey}_{_row}_{_column}";
+            if (isReturnResult)
+            {
+                var result = writerExpression.CreateFilterResultParametrStructAutoKey<ButtonSearch, TUser>(resultSearch, conditionFlag, key);
+                return result;
+            }
+            writerExpression.ChacheOrGetExpressionAutoKey(ref conditionFlag, key);
+            return conditionFlag;
         }
 
         private BinaryExpression GetConditionFlag(ParameterExpression resultSearch)
