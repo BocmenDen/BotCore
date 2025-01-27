@@ -3,7 +3,7 @@
     [AttributeUsage(AttributeTargets.Class)]
     public class ServiceAttribute(string type) : Attribute
     {
-        public readonly string LiftimeType = string.IsNullOrWhiteSpace(type) ? throw new ArgumentException(nameof(type)) : type;
+        public readonly string LifetimeType = string.IsNullOrWhiteSpace(type) ? throw new ArgumentException(nameof(type)) : type;
         public ServiceAttribute(ServiceType serviceType) : this(serviceType.ToString()) { }
     }
 

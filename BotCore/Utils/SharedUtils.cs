@@ -2,6 +2,6 @@
 {
     public static class SharedUtils
     {
-        public static int CalculeteID<T>(params object[] secret) => HashCode.Combine(secret, typeof(T));
+        public static int CalculateID<T>(params object[] secret) => HashCode.Combine(secret, typeof(T));
     }
 }

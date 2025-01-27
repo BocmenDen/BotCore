@@ -1,7 +1,9 @@
 ﻿using BotCore.Attributes;
 using BotCore.Interfaces;
+using BotCore.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
 
 namespace BotCore.Services
 {
@@ -16,22 +18,22 @@ namespace BotCore.Services
         public ConditionalPooledObjectProvider(
             IServiceProvider serviceProvider,
             IFactory<TObject>? factory = null,
-            IConditionalPooledObjectProviderOptions<TObject>? conditionalPooledObjectProviderOptions = null,
+            IOptions<PooledObjectProviderOptions<TObject>>? conditionalPooledObjectProviderOptions = null,
             IReset<TObject>? reset = null
             )
         {
             if (factory == null)
             {
-                _get = () => serviceProvider.GetRequiredService<TObject>();
+                _get = serviceProvider.GetRequiredService<TObject>;
                 _return = (_) => { };
                 return;
             }
             Action<TObject>? clearF = null;
             if (reset != null)
-                clearF = (v) => reset.Clear(v);
+                clearF = reset.Clear;
             ObjectPool<TObject> pool = new DefaultObjectPoolProvider()
             {
-                MaximumRetained = conditionalPooledObjectProviderOptions?.MaximumRetained ?? Environment.ProcessorCount * 2
+                MaximumRetained = conditionalPooledObjectProviderOptions?.Value.MaximumRetained ?? Environment.ProcessorCount * 2
             }.Create(new PooledObjectPolicyDefault<TObject>(factory.Create, clearF));
 
             if (pool is IDisposable disposable)

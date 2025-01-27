@@ -8,7 +8,7 @@ namespace BotCore.FilterRouter.Attributes
     public abstract class BaseFilterAttribute<TUser>(bool isReturnValue) : Attribute
         where TUser : IUser
     {
-        public readonly bool IsReturnValue=isReturnValue;
+        public readonly bool IsReturnValue = isReturnValue;
         public abstract Expression GetExpression(WriterExpression<TUser> writerExpression);
     }
 }

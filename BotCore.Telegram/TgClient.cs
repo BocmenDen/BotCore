@@ -3,8 +3,8 @@ using BotCore.Base;
 using BotCore.Interfaces;
 using BotCore.Models;
 using BotCore.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -14,7 +14,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace BotCore.Tg
 {
     [Service(ServiceType.Singltone)]
-    public partial class TgClient<TUser, TDB> : ClientBot<TUser>, IDisposable
+    public partial class TgClient<TUser, TDB> : ClientBot<TUser, UpdateContext<TUser>>, IDisposable
         where TUser : IUser, IUserTgExtension
         where TDB : IDB
     {
@@ -24,9 +24,12 @@ namespace BotCore.Tg
         private EventId _eventId;
         private readonly DBClientHelper<TUser, TDB, Chat, SingletonObjectProvider<TDB>> _database;
 
-        public TgClient(IConfiguration configuration, DBClientHelper<TUser, TDB, Chat, SingletonObjectProvider<TDB>> database, ILogger<TgClient<TUser, TDB>>? logger = null, ReceiverOptions? receiverOptions = null)
+        public TgClient(IOptions<TgClientOptions> option,
+                        DBClientHelper<TUser, TDB, Chat, SingletonObjectProvider<TDB>> database,
+                        ILogger<TgClient<TUser, TDB>>? logger = null,
+                        ReceiverOptions? receiverOptions = null)
         {
-            string token = configuration[TgClient.KeySettingTOKEN] ?? throw new Exception("Отсутствует токен для создания клиента Telegram");
+            string token = option.Value.Token ?? throw new Exception("Отсутствует токен подключения к Tg боту");
             Id = token.GetHashCode();
             BotClient = new TelegramBotClient(token);
             _receiverOptions = receiverOptions;
@@ -76,8 +79,8 @@ namespace BotCore.Tg
             async Task sendMessageSaveId(Func<Task<Message>> action)
             {
                 var message = await action();
-                send[TgClient.MessegesToEdit] = message.Id;
-                if (updateModel != null) updateModel[TgClient.MessegesToEdit] = message.Id;
+                send[TgClient.MessagesToEdit] = message.Id;
+                if (updateModel != null) updateModel[TgClient.MessagesToEdit] = message.Id;
             }
 
             var chat = user.GetTgChat();
@@ -102,8 +105,8 @@ namespace BotCore.Tg
                 return;
             }
 
-            if (send.ContainsKey(TgClient.MessegesToEdit) && send.Inline == null && send.Keyboard == null)
-                await EditMessage(user, (int)send[TgClient.MessegesToEdit], send, updateModel, sendMessageSaveId);
+            if (send.ContainsKey(TgClient.MessagesToEdit) && send.Inline == null && send.Keyboard == null)
+                await EditMessage(user, (int)send[TgClient.MessagesToEdit], send, updateModel, sendMessageSaveId);
             else
                 await sendMessageSaveId(() => BotClient.SendMessage(chat, send.Message!, replyMarkup: TgClient.GetReplyMarkup(send), parseMode: send.GetParseMode()));
         }
@@ -192,10 +195,8 @@ namespace BotCore.Tg
 
     public static partial class TgClient
     {
-        public const string KeySettingTOKEN = "tg_token";
-        public const string MessegesToEdit = "tg_messagesToEdit";
+        public const string MessagesToEdit = "tg_messagesToEdit";
         public const string KeyParseMode = "tg_parseMode";
-
         public const string KeyMediaSourceFileId = "tg_fileId";
 
         private static readonly Regex _parseCommand = GetParseCommandRegex();

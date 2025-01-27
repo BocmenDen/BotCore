@@ -2,13 +2,12 @@
 using BotCore.FilterRouter.Extensions;
 using BotCore.FilterRouter.Models;
 using BotCore.Interfaces;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace BotCore.FilterRouter.Utils
 {
-    public static class BulderFilters
+    public static class BuilderFilters
     {
         public static Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction> CompileFilters<TUser>(MethodInfo method)
             where TUser : IUser
@@ -26,11 +25,11 @@ namespace BotCore.FilterRouter.Utils
             );
             writerExpression.WriteBody(Expression.Return(skipOtherFilters, result));
             writerExpression.WriteBody(Expression.Label(skipOtherFilters, Expression.Constant(new EvaluatedAction(false, null))));
-            Expression finalBlock = Expression.Block(writerExpression.GetParametrExpressions(), writerExpression);
+            Expression finalBlock = Expression.Block(writerExpression.GetParameterExpressions(), writerExpression);
             Expression<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>> finalLambda =
                 Expression.Lambda<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>>(
                         finalBlock,
-                        [writerExpression.ServiceProvider, writerExpression.ContextParametr]
+                        [writerExpression.ServiceProvider, writerExpression.ContextParameter]
                     );
             return finalLambda.Compile();
         }
@@ -46,7 +45,7 @@ namespace BotCore.FilterRouter.Utils
         {
             valuesFilters = [];
             resultFilter = Expression.Parameter(typeof(bool), "resultFilter");
-            writerExpression.RegisterNoChacheParametr(resultFilter);
+            writerExpression.RegisterNoCacheParameter(resultFilter);
             var attributes = method.GetCustomAttributes<BaseFilterAttribute<TUser>>();
             var noResultAttributes = attributes.Where(x => !x.IsReturnValue);
             if (noResultAttributes.Any())
@@ -102,7 +101,7 @@ namespace BotCore.FilterRouter.Utils
                 }
                 if (currentParametr.ParameterType == typeof(IUpdateContext<TUser>))
                 {
-                    inputParametrs.Add(writerExpression.ContextParametr);
+                    inputParametrs.Add(writerExpression.ContextParameter);
                     continue;
                 }
                 var attr = currentParametr.GetCustomAttribute<FilterResultPositionAttribute>();

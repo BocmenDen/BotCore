@@ -1,6 +1,5 @@
 ﻿using BotCore.EfUserDb;
 using BotCore.FilterRouter;
-using BotCore.FilterRouter.Attributes;
 using BotCore.FilterRouter.Extensions;
 using BotCore.Interfaces;
 using BotCore.Models;
@@ -10,76 +9,73 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Reflection;
-
-#pragma warning disable IDE0079 // Удалить ненужное подавление
-#pragma warning disable CS8321  // Локальная функция объявлена, но не используется
-#pragma warning disable IDE0051 // Удалите неиспользуемые закрытые члены
 
 namespace BotCore.Demo
 {
     class Program
     {
-        [ResourceKey("keyboard")]
-        readonly static ButtonsSend keyboard = new([["Мой GitHub", "Ссылка на этот проект"]]);
-
-        [CommandFilter<User>("start")]
-        [MessageTypeFilter<User>(UpdateType.Command)]
-        static async Task StartMessageHandler(IUpdateContext<User> context)
-        {
-            SendModel sendModel = "Привет!";
-            sendModel.Keyboard = keyboard;
-            await context.Reply(sendModel);
-        }
-
-        [ButtonsFilter<User>("keyboard", 0, 0)]
-        [FilterPriority(0)]
-        static bool ListenerKeyboard(ILogger<Program> logger, IUpdateContext<User> context, ButtonSearch? buttonSearch)
-        {
-            logger.LogInformation("Пользователь {user}, нажал на кнопку {buttonText}", context.User, buttonSearch?.Button.Text);
-            return false;
-        }
-
-        [ButtonsFilter<User>("keyboard", 0, 0)]
-        [FilterPriority(1)]
-        static async Task KeyboardHendlerMyGit(IUpdateContext<User> context)
-        {
-            await context.Reply("https://github.com/BocmenDen?tab=repositories");
-        }
-        
-        [ButtonsFilter<User>("keyboard", 0, 1)]
-        [FilterPriority(1)]
-        static async Task KeyboardHendlerBotCoreProject(IUpdateContext<User> context)
-        {
-            await context.Reply("https://github.com/BocmenDen/BotCore");
-        }
-
-        static void Main()
-        {
-            IHost host = BotBuilder.CreateDefaultBuilder()
+        /// <summary>
+        /// Создание и конфигурация хоста
+        /// </summary>
+        static IHost ConfigureServices()
+            => BotBuilder.CreateDefaultBuilder()
                 .ConfigureAppConfiguration(app => app.AddUserSecrets(Assembly.GetExecutingAssembly()))
-                .RegisterDBContextOptions(b => b.UseSqlite($"Data Source={Path.GetRandomFileName()}.db"))
                 .RegisterServices(
                     Assembly.GetAssembly(typeof(Program)),
                     Assembly.GetAssembly(typeof(TgClient)),
                     Assembly.GetAssembly(typeof(CombineBots<,>)),
-                    Assembly.GetAssembly(typeof(HandleFilterRouter<>))
+                    Assembly.GetAssembly(typeof(HandleFilterRouter<,>))
                 )
-                .RegisterFiltersRouterAuto<User>()
+                .ConfigureServices((b, s) =>
+                {
+                    // Говорим откуда читать параметры
+                    s.Configure<TgClientOptions>(b.Configuration.GetSection("TgClientOptions"));
+                    s.Configure<DataBaseOptions>(b.Configuration.GetSection("DataBase"));
+                    s.Configure<PooledObjectProviderOptions<DataBase>>(b.Configuration.GetSection("DataBase"));
+                })
+                .RegisterFiltersRouterAuto<User>() // Регистрация фильтров (См. BotCore.Demo.DemoFiltersRouter)
+                .RegisterDBContextOptions((s, c, b) => b.UseSqlite($"Data Source={s.GetRequiredService<IOptions<DataBaseOptions>>().Value.GetPathOrDefault()}"))
                 .Build();
 
-            IServiceProvider service = host.Services;
+        /// <summary>
+        /// Получение ботов
+        /// </summary>
+        static IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> GetBots(IHost host)
+        {
+            yield return host.Services.GetRequiredService<TgClient<UserTg, DataBase>>();
+            yield break;
+        }
+        /// <summary>
+        /// Подключение ботов к первому слою
+        /// </summary>
+        static void ConnectBotsToLayer(IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> bots, IInputLayer<IUser, IUpdateContext<IUser>> inputLayer)
+        {
+            foreach (var bot in bots)
+                bot.Update += inputLayer.HandleNewUpdateContext;
+        }
+        /// <summary>
+        /// Ожидание завершения работы ботов
+        /// </summary>
+        static void WaitBots(IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> bots, CancellationToken token = default)
+        {
+            var tasks = bots.Select(x => x.Run(token)).ToArray();
+            Task.WaitAll(tasks, token);
+        }
 
-            var tgClient = service.GetRequiredService<TgClient<UserTg, DataBase>>();
-            var combineUser = service.GetRequiredService<CombineBots<User, DataBase>>();
-            var spamFilter = host.Services.GetRequiredService<MessageSpam<User>>();
-            var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User>>();
-            tgClient.Update += combineUser.HandleNewUpdateContext;
-            combineUser.NewUpdateContext += spamFilter.HandleCommand;
-            spamFilter.Init(filterRouting.HandleNewUpdateContext);
-
-            tgClient.Run().Wait();
+        static void Main()
+        {
+            IHost host = ConfigureServices();
+            var bots = GetBots(host);
+            var combineUser = host.Services.GetRequiredService<CombineBots<DataBase, User>>();
+            var spamFilter = host.Services.GetRequiredService<MessageSpam<User, UpdateContextOneBot<User>>>();
+            var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User, UpdateContextOneBot<User>>>();
+            ConnectBotsToLayer(bots, combineUser);
+            combineUser.Update += spamFilter.HandleNewUpdateContext;
+            spamFilter.Update += filterRouting.HandleNewUpdateContext;
+            filterRouting.Update += (context) => context.Reply("Извините я Вас не понял");
+            WaitBots(bots);
         }
     }
 }

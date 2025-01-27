@@ -9,7 +9,7 @@ namespace BotCore.FilterRouter.Attributes
     public class MessageTypeFilterAttribute<TUser>(UpdateType updateType) : BaseFilterAttribute<TUser>(false)
         where TUser : IUser
     {
-        public readonly UpdateType UpdateType=updateType;
+        public readonly UpdateType UpdateType = updateType;
 
         public override Expression GetExpression(WriterExpression<TUser> writerExpression)
         {

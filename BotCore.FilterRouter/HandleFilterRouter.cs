@@ -5,12 +5,13 @@ using BotCore.Interfaces;
 namespace BotCore.FilterRouter
 {
     [Service(ServiceType.Singltone)]
-    public class HandleFilterRouter<TUser>(IServiceProvider service, IConditionalActionCollection<TUser> conditionalActionCollection)
+    public class HandleFilterRouter<TUser, TContext>(IServiceProvider service, IConditionalActionCollection<TUser> conditionalActionCollection) : IInputLayer<TUser, TContext>, INextLayer<TUser, TContext>
         where TUser : IUser
+        where TContext : IUpdateContext<TUser>
     {
-        public event Action<IUpdateContext<TUser>>? UpdateContextUnrecognized;
+        public event Func<TContext, Task>? Update;
 
-        public async void HandleNewUpdateContext(IUpdateContext<TUser> context)
+        public async Task HandleNewUpdateContext(TContext context)
         {
             foreach (var conditionalAction in conditionalActionCollection)
             {
@@ -18,7 +19,8 @@ namespace BotCore.FilterRouter
                 if (evaluatedAction.IsIgnore) continue;
                 if (await evaluatedAction.Execute!()) return;
             }
-            UpdateContextUnrecognized?.Invoke(context);
+            if (Update != null)
+                await Update.Invoke(context);
         }
     }
 }

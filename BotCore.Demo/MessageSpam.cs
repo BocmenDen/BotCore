@@ -7,19 +7,19 @@ using Microsoft.Extensions.Logging;
 namespace BotCore.Demo
 {
     [Service(ServiceType.Singltone)]
-    public class MessageSpam<TUser> where TUser : IUser
+    public class MessageSpam<TUser, TContext> : INextLayer<TUser, TContext>, IInputLayer<TUser, TContext>
+        where TUser : IUser
+        where TContext : IUpdateContext<TUser>
     {
         private readonly SpamBroker<long, TUser> _spamFilter;
         private readonly SingleMessageQueue<long, TUser> _singleMessageFilter;
         private readonly BlackList<TUser> _blackList;
-        private readonly ILogger _logger;
-        private Action<IUpdateContext<TUser>>? _action;
+        public event Func<TContext, Task>? Update;
         private readonly TimeSpan _banTime;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Использовать основной конструктор", Justification = "Нужно бы завести таймер для автоочистки буфферов")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0290:Использовать основной конструктор", Justification = "Нужно бы завести таймер для автоочистки буферов")]
         public MessageSpam(
             IConfiguration configuration,
-            ILogger<MessageSpam<TUser>> logger,
             ILogger<SpamBroker<long, TUser>> loggerSpam,
             ILogger<SingleMessageQueue<long, TUser>> loggerSingleSpam,
             ILogger<BlackList<TUser>> blackListLogger
@@ -36,41 +36,27 @@ namespace BotCore.Demo
                 loggerSpam
             );
             _blackList = new(blackListLogger);
-            _logger=logger;
             _banTime=configuration.GetValue<TimeSpan?>("spam_timeBan") ?? TimeSpan.FromMinutes(5);
         }
 
-        public void Init(Action<IUpdateContext<TUser>> action)
-        {
-            _action = action;
-        }
-
-        public async void HandleCommand(IUpdateContext<TUser> updateData)
+        public async Task HandleNewUpdateContext(TContext updateData)
         {
             if (_blackList.GetSpamState(updateData).IsSpam() ||
                 (await _singleMessageFilter.CheckMessageSpamStatus(updateData, "Пожалуйста, подождите немного! ✨ Ваше сообщение обрабатывается… ⚙️")).IsSpam()
                 ) return;
-            var state = await _spamFilter.CheckMessageSpamStatus(updateData, $"Вы превысели {_spamFilter.MaxEvent} сообщений за {ConvertTimeSpan(_spamFilter.TimeWindow)}, выдан бан на {ConvertTimeSpan(_banTime)}");
+            var state = await _spamFilter.CheckMessageSpamStatus(updateData, $"Вы превысили {_spamFilter.MaxEvent} сообщений за {ConvertTimeSpan(_spamFilter.TimeWindow)}, выдан бан на {ConvertTimeSpan(_banTime)}");
             if (state == StateSpam.ForbiddenFirst)
                 _blackList.AddBlock(updateData.User, _banTime);
             if (state.IsSpam()) return;
             _singleMessageFilter.RegisterEvent(updateData);
-            HandleMessage(updateData);
+            await HandleMessage(updateData);
             _singleMessageFilter.UnregisterEvent(updateData);
         }
 
-        private void HandleMessage(IUpdateContext<TUser> updateData)
+        private Task HandleMessage(TContext updateData)
         {
-            if (_action == null) return;
-            try
-            {
-                _action(updateData);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "При обработке сообщения [{message}] у пользователя [{user}] произошла ошибка", updateData, updateData.User);
-                _ = updateData.Reply($"Произошла ошибка при обработке сообщения {ex.Message}");
-            }
+            if (Update == null) return Task.CompletedTask;
+            return Update(updateData);
         }
 
         private static string ConvertTimeSpan(TimeSpan timeSpan)

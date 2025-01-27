@@ -35,11 +35,11 @@ namespace BotCore.FilterRouter.Utils
         {
             if (assemblies == null) return this;
             foreach (var assembly in assemblies)
-                LoadFromAssemblery(assembly);
+                LoadFromAssembly(assembly);
             return this;
         }
 
-        public ConditionalActionCollectionBuilder<TUser> LoadFromAssemblery(Assembly? assembly)
+        public ConditionalActionCollectionBuilder<TUser> LoadFromAssembly(Assembly? assembly)
         {
             if (assembly is null) return this;
             foreach (var type in assembly.GetTypes())
@@ -50,7 +50,7 @@ namespace BotCore.FilterRouter.Utils
                     int priority = -1;
                     if (priorityInfo != null) priority = priorityInfo.Priority;
                     if (priorityInfo == null && !method.GetCustomAttributes<BaseFilterAttribute<TUser>>().Any()) continue;
-                    Add(BulderFilters.CompileFilters<TUser>(method), priority);
+                    Add(BuilderFilters.CompileFilters<TUser>(method), priority);
                 }
             }
             return this;

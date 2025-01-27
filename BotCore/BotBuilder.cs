@@ -49,7 +49,7 @@ namespace BotCore
                         attr = (ServiceAttribute?)implementationType.GetCustomAttribute(typeof(ServiceAttribute), false);
                         if (attr == null) continue;
                     }
-                    var register = _providersRegistrationService[attr.LiftimeType];
+                    var register = _providersRegistrationService[attr.LifetimeType];
                     register(context, services, type, implementationType);
                 }
             });

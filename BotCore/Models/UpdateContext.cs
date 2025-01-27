@@ -5,7 +5,7 @@ namespace BotCore.Models
 {
     public record class UpdateContext<TUser> : IUpdateContext<TUser> where TUser : IUser
     {
-        public readonly ClientBot<TUser> Bot;
+        public readonly ClientBot<TUser, UpdateContext<TUser>> Bot;
 
         public IClientBotFunctions BotFunctions => Bot;
 
@@ -15,7 +15,7 @@ namespace BotCore.Models
 
         public Task Reply(SendModel send) => Bot.Send(User, send, Update);
 
-        public UpdateContext(ClientBot<TUser> clientBot, TUser user, UpdateModel update)
+        public UpdateContext(ClientBot<TUser, UpdateContext<TUser>> clientBot, TUser user, UpdateModel update)
         {
             Bot=clientBot??throw new ArgumentNullException(nameof(clientBot));
             User=user;

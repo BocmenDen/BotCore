@@ -8,7 +8,7 @@ namespace BotCore.FilterRouter.Extensions
 {
     public static class WriterExpressionExtensions
     {
-        public static StateCache ChacheOrGetExpression<T, TUser>(this WriterExpression<TUser> writer, ref T expression, string key)
+        public static StateCache CacheOrGetExpression<T, TUser>(this WriterExpression<TUser> writer, ref T expression, string key)
             where T : Expression
             where TUser : IUser
         {
@@ -24,7 +24,7 @@ namespace BotCore.FilterRouter.Extensions
             }
         }
 
-        public static StateCache ChacheOrGetExpressionAutoKey<T, TUser>(this WriterExpression<TUser> writer,
+        public static StateCache CacheOrGetExpressionAutoKey<T, TUser>(this WriterExpression<TUser> writer,
             ref T expression,
             string key = "",
             [CallerLineNumber] int lineMember = -1,
@@ -35,59 +35,59 @@ namespace BotCore.FilterRouter.Extensions
             where TUser : IUser
         {
             if (TryGenerateKey(key, lineMember, functionName, file, out var newKey))
-                return writer.ChacheOrGetExpression(ref expression, newKey!);
-            return writer.ChacheOrGetExpression(ref expression, expression.ToString());
+                return writer.CacheOrGetExpression(ref expression, newKey!);
+            return writer.CacheOrGetExpression(ref expression, expression.ToString());
         }
 
-        public static MemberExpression GetBotFunctionsParametr<TUser>(this WriterExpression<TUser> writer)
+        public static MemberExpression GetBotFunctionsParameter<TUser>(this WriterExpression<TUser> writer)
             where TUser : IUser
         {
-            var exp = Expression.Property(writer.ContextParametr, nameof(IUpdateContext<TUser>.BotFunctions));
-            writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            var exp = Expression.Property(writer.ContextParameter, nameof(IUpdateContext<TUser>.BotFunctions));
+            writer.CacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
             return exp;
         }
 
-        public static MemberExpression GetUpdateParametr<TUser>(this WriterExpression<TUser> writer)
+        public static MemberExpression GetUpdateParameter<TUser>(this WriterExpression<TUser> writer)
             where TUser : IUser
         {
-            var exp = Expression.Property(writer.ContextParametr, nameof(IUpdateContext<TUser>.Update));
-            writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            var exp = Expression.Property(writer.ContextParameter, nameof(IUpdateContext<TUser>.Update));
+            writer.CacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
             return exp;
         }
 
         public static MemberExpression GetUpdateCommand<TUser>(this WriterExpression<TUser> writer)
             where TUser : IUser
         {
-            var exp = Expression.Property(writer.GetUpdateParametr(), nameof(IUpdateContext<TUser>.Update.Command));
-            writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            var exp = Expression.Property(writer.GetUpdateParameter(), nameof(IUpdateContext<TUser>.Update.Command));
+            writer.CacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
             return exp;
         }
         public static MemberExpression GetUpdateType<TUser>(this WriterExpression<TUser> writer)
             where TUser : IUser
         {
-            var exp = Expression.Field(writer.GetUpdateParametr(), nameof(IUpdateContext<TUser>.Update.UpdateType));
-            writer.ChacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            var exp = Expression.Field(writer.GetUpdateParameter(), nameof(IUpdateContext<TUser>.Update.UpdateType));
+            writer.CacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
             return exp;
         }
 
-        public static ParameterExpression CreateFilterResultParametrClass<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? varableName = null)
+        public static ParameterExpression CreateFilterResultParameterClass<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? variableName = null)
             where T : class
             where TUser : IUser
         {
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T>).GetConstructor([typeof(bool), typeof(T)])??
                 throw new Exception("Constructor not found"), flag, value);
-            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T>), varableName);
+            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T>), variableName);
 
             return WriteFilterResultParametr(writer, key, newFilterResult, resultExpression);
         }
 
-        public static ParameterExpression CreateFilterResultParametrStruct<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? varableName = null)
-            where T: struct
+        public static ParameterExpression CreateFilterResultParameterStruct<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? variableName = null)
+            where T : struct
             where TUser : IUser
         {
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T?>).GetConstructor([typeof(bool), typeof(T?)])??
                 throw new Exception("Constructor not found"), flag, value);
-            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T?>), varableName);
+            ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T?>), variableName);
             return WriteFilterResultParametr(writer, key, newFilterResult, resultExpression);
         }
 
@@ -96,13 +96,13 @@ namespace BotCore.FilterRouter.Extensions
         {
             StateCache stateCache = StateCache.Cached;
             if (!string.IsNullOrWhiteSpace(key))
-                stateCache = writer.ChacheOrGetExpression(ref resultExpression, key);
+                stateCache = writer.CacheOrGetExpression(ref resultExpression, key);
             if (stateCache == StateCache.Cached)
                 writer.WriteBody(Expression.Assign(resultExpression, newFilterResult));
             return resultExpression;
         }
 
-        public static ParameterExpression CreateFilterResultParametrClassAutoKey<T, TUser>(
+        public static ParameterExpression CreateFilterResultParameterClassAutoKey<T, TUser>(
                 this WriterExpression<TUser> writer,
                 Expression value,
                 Expression flag,
@@ -115,14 +115,14 @@ namespace BotCore.FilterRouter.Extensions
             where TUser : IUser
         {
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
-            return writer.CreateFilterResultParametrClass<T, TUser>(value, flag, keyResult
+            return writer.CreateFilterResultParameterClass<T, TUser>(value, flag, keyResult
 #if DEBUG
                 , $"{Path.GetFileName(file)}_{functionName}_{key}"
 #endif
                 );
         }
 
-        public static ParameterExpression CreateFilterResultParametrStructAutoKey<T, TUser>(
+        public static ParameterExpression CreateFilterResultParameterStructAutoKey<T, TUser>(
                 this WriterExpression<TUser> writer,
                 Expression value,
                 Expression flag,
@@ -135,7 +135,7 @@ namespace BotCore.FilterRouter.Extensions
             where TUser : IUser
         {
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
-            return writer.CreateFilterResultParametrStruct<T, TUser>(value, flag, keyResult
+            return writer.CreateFilterResultParameterStruct<T, TUser>(value, flag, keyResult
 #if DEBUG
                 , $"{Path.GetFileName(file)}_{functionName}_{key}"
 #endif
@@ -162,7 +162,7 @@ namespace BotCore.FilterRouter.Extensions
                 .First()
                 .MakeGenericMethod(serviceType);
             var parametr = Expression.Parameter(serviceType);
-            var stateChache = writer.ChacheOrGetExpressionAutoKey(ref parametr, serviceType.Name);
+            var stateChache = writer.CacheOrGetExpressionAutoKey(ref parametr, serviceType.Name);
             if (stateChache == StateCache.Exist) return parametr;
             var service = Expression.Call(method, writer.ServiceProvider);
             writer.WriteBody(Expression.Assign(parametr, service));

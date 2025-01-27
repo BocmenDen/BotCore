@@ -3,18 +3,20 @@ using BotCore.Models;
 
 namespace BotCore.Base
 {
-    public abstract class ClientBot<TUser> : IClientBotFunctions, IDisposable where TUser : IUser
+    public abstract class ClientBot<TUser, TContext> : IClientBot<TUser, TContext>
+        where TUser : IUser
+        where TContext : IUpdateContext<TUser>
     {
         public int Id { get; protected set; }
 
-        public event Action<IUpdateContext<TUser>>? Update;
+        public event Func<TContext, Task>? Update;
 
-        protected async Task HandleUpdate(Func<Task<UpdateContext<TUser>?>> fUpdateContext)
+        protected async Task HandleUpdate(Func<Task<TContext?>> fUpdateContext)
         {
             if (Update == null) return;
             var update = await fUpdateContext();
             if (update == null) return;
-            Update.Invoke(update);
+            await Update.Invoke(update);
         }
 
         public abstract Task Run(CancellationToken token = default);

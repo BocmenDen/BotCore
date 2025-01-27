@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 namespace BotCore.FilterRouter.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1, bool isReturnResult=true) : BaseFilterAttribute<TUser>(isReturnResult)
+    public class ButtonsFilterAttribute<TUser>(string resourceKey, int row = -1, int column = -1, bool isReturnResult = true) : BaseFilterAttribute<TUser>(isReturnResult)
     where TUser : IUser
     {
         private readonly string _resourceKey = resourceKey;
@@ -21,12 +21,12 @@ namespace BotCore.FilterRouter.Attributes
             var resultSearch = GetSearchResult(writerExpression, buttons);
             var conditionFlag = GetConditionFlag(resultSearch);
             var key = $"ResultButtonsFilter_{_resourceKey}_{_row}_{_column}";
-            if (isReturnResult)
+            if (IsReturnValue)
             {
-                var result = writerExpression.CreateFilterResultParametrStructAutoKey<ButtonSearch, TUser>(resultSearch, conditionFlag, key);
+                var result = writerExpression.CreateFilterResultParameterStructAutoKey<ButtonSearch, TUser>(resultSearch, conditionFlag, key);
                 return result;
             }
-            writerExpression.ChacheOrGetExpressionAutoKey(ref conditionFlag, key);
+            writerExpression.CacheOrGetExpressionAutoKey(ref conditionFlag, key);
             return conditionFlag;
         }
 
@@ -52,13 +52,13 @@ namespace BotCore.FilterRouter.Attributes
         {
             MethodCallExpression searchIndexButton = Expression.Call
                 (
-                    writerExpression.GetBotFunctionsParametr(),
+                    writerExpression.GetBotFunctionsParameter(),
                     typeof(IClientBotFunctions).GetMethod(nameof(IClientBotFunctions.GetIndexButton)) ?? throw new Exception("Method not found"),
-                    writerExpression.GetUpdateParametr(),
+                    writerExpression.GetUpdateParameter(),
                     buttons
                 );
             ParameterExpression resultSearchVarable = Expression.Variable(typeof(ButtonSearch?), $"resultSearch_{_resourceKey}");
-            var stateChache = writerExpression.ChacheOrGetExpressionAutoKey(ref resultSearchVarable, _resourceKey);
+            var stateChache = writerExpression.CacheOrGetExpressionAutoKey(ref resultSearchVarable, _resourceKey);
             if (stateChache == StateCache.Cached)
             {
                 BinaryExpression assignResultSearch = Expression.Assign(resultSearchVarable, searchIndexButton);
@@ -74,7 +74,7 @@ namespace BotCore.FilterRouter.Attributes
                 GetCondition(ResourceKeyUtil.GetValue<IEnumerable<IEnumerable<ButtonSend>>>(_resourceKey))) ??
                 throw new InvalidOperationException("ResourceKey not found");
             ConstantExpression buttonsEx = Expression.Constant(buttons);
-            _ = writerExpression.ChacheOrGetExpressionAutoKey(ref buttonsEx, _resourceKey);
+            _ = writerExpression.CacheOrGetExpressionAutoKey(ref buttonsEx, _resourceKey);
             return buttonsEx;
         }
 

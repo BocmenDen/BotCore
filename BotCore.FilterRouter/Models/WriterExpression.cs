@@ -10,10 +10,10 @@ namespace BotCore.FilterRouter.Models
         private readonly Dictionary<string, Expression> _expressions = [];
         private readonly List<Expression> _body = [];
         private readonly List<ParameterExpression> _parameterExpressions = [];
-        public readonly ParameterExpression ContextParametr = Expression.Parameter(typeof(IUpdateContext<TUser>));
+        public readonly ParameterExpression ContextParameter = Expression.Parameter(typeof(IUpdateContext<TUser>));
         public readonly ParameterExpression ServiceProvider = Expression.Parameter(typeof(IServiceProvider));
 
-        public IEnumerable<ParameterExpression> GetParametrExpressions() => _parameterExpressions.Concat(_expressions.Values.OfType<ParameterExpression>());
+        public IEnumerable<ParameterExpression> GetParameterExpressions() => _parameterExpressions.Concat(_expressions.Values.OfType<ParameterExpression>());
 
         public IEnumerator<Expression> GetEnumerator() => ((IEnumerable<Expression>)_body).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_body).GetEnumerator();
@@ -25,6 +25,6 @@ namespace BotCore.FilterRouter.Models
 
         public void WriteBody(Expression expression) => _body.Add(expression);
 
-        public void RegisterNoChacheParametr(ParameterExpression parameterExpression) => _parameterExpressions.Add(parameterExpression);
+        public void RegisterNoCacheParameter(ParameterExpression parameterExpression) => _parameterExpressions.Add(parameterExpression);
     }
 }

@@ -7,21 +7,26 @@ using System.Collections.Concurrent;
 namespace BotCore.OneBot
 {
     [Service(ServiceType.Singltone)]
-    public class CombineBots<TUser, TDB>(TypeNameGenerator typeNameGenerator, DBClientHelper<TUser, TDB, UserLinkInfo, ConditionalPooledObjectProvider<TDB>> database, ILogger<CombineBots<TUser, TDB>>? logger = null)
+    public class CombineBots<TDB, TUser>(TypeNameGenerator typeNameGenerator,
+                                         DBClientHelper<TUser, TDB, UserLinkInfo,
+                                         ConditionalPooledObjectProvider<TDB>> database,
+                                         ILogger<CombineBots<TDB, TUser>>? logger = null) : INextLayer<TUser, UpdateContextOneBot<TUser>>,
+                                                                                            IInputLayer<IUser, IUpdateContext<IUser>>
         where TUser : IUser
         where TDB : class, IDB
     {
         private readonly ConcurrentDictionary<Type, string> _typesUser = [];
 
-        private readonly ILogger<CombineBots<TUser, TDB>>? _logger = logger;
+        private readonly ILogger<CombineBots<TDB, TUser>>? _logger = logger;
         private readonly TypeNameGenerator _typeNameGenerator = typeNameGenerator;
         private readonly DBClientHelper<TUser, TDB, UserLinkInfo, ConditionalPooledObjectProvider<TDB>> _database = database;
 
-        public event Action<IUpdateContext<TUser>>? NewUpdateContext;
+        public event Func<UpdateContextOneBot<TUser>, Task>? Update;
 
-        public async void HandleNewUpdateContext<T>(IUpdateContext<T> context) where T : IUser
+        public async Task HandleNewUpdateContext(IUpdateContext<IUser> context)
         {
-            Type type = typeof(T);
+            if (Update == null) return;
+            Type type = context.User.GetType();
             string typeName;
             if (!_typesUser.TryGetValue(type, out typeName!))
             {
@@ -33,8 +38,8 @@ namespace BotCore.OneBot
             if (isCreate)
                 _logger?.LogInformation("Создан объединяющий пользователь {userNew}, на основе {userOld}", user, context.User);
 
-            UpdateContextOneBot<TUser, T> newContext = new(context, user);
-            NewUpdateContext?.Invoke(newContext);
+            UpdateContextOneBot<TUser> newContext = new(context, user);
+            await Update.Invoke(newContext);
         }
     }
 }

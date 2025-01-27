@@ -8,8 +8,8 @@
         public string? MimeType;
         private readonly Func<Task<Stream>> _getStream;
 
-        public MediaSource(Func<Task<Stream>> getStraem, CollectionBotParameters? parameters = null) : base(parameters)
-            => _getStream = getStraem;
+        public MediaSource(Func<Task<Stream>> getStream, CollectionBotParameters? parameters = null) : base(parameters)
+            => _getStream = getStream;
 
         public Task<Stream> GetStream() => _getStream();
     }
