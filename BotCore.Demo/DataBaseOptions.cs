@@ -1,6 +1,4 @@
-﻿using BotCore.Models;
-
-namespace BotCore.Demo
+﻿namespace BotCore.Demo
 {
     public class DataBaseOptions
     {

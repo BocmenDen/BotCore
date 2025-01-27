@@ -70,10 +70,35 @@ namespace BotCore.FilterRouter.Extensions
             return exp;
         }
 
+        public static MemberExpression GetMessageParameter<TUser>(this WriterExpression<TUser> writer)
+            where TUser : IUser
+        {
+            var exp = Expression.Property(writer.GetUpdateParameter(), nameof(IUpdateContext<TUser>.Update.Message));
+            writer.CacheOrGetExpressionAutoKey(ref exp, nameof(TUser));
+            return exp;
+        }
+
+        private static void CorrectValueAndFlag<T, TUser>(WriterExpression<TUser> writer, ref Expression value, ref Expression flag, string? key = null, string? variableName = null)
+            where TUser : IUser
+        {
+            if (value is not ParameterExpression)
+            {
+                if (flag is not ParameterExpression)
+                {
+                    var varable = Expression.Variable(typeof(bool), $"flag_{variableName}");
+                    if (writer.CacheOrGetExpressionAutoKey(ref varable, key!) == StateCache.Cached)
+                        writer.WriteBody(Expression.Assign(varable, flag));
+                    flag = varable;
+                }
+                value = Expression.Condition(flag, Expression.Default(typeof(T)), value);
+            }
+        }
+
         public static ParameterExpression CreateFilterResultParameterClass<T, TUser>(this WriterExpression<TUser> writer, Expression value, Expression flag, string? key = null, string? variableName = null)
             where T : class
             where TUser : IUser
         {
+            CorrectValueAndFlag<T, TUser>(writer, ref value, ref flag, key, variableName);
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T>).GetConstructor([typeof(bool), typeof(T)])??
                 throw new Exception("Constructor not found"), flag, value);
             ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T>), variableName);
@@ -85,8 +110,9 @@ namespace BotCore.FilterRouter.Extensions
             where T : struct
             where TUser : IUser
         {
+            CorrectValueAndFlag<T?, TUser>(writer, ref value, ref flag, key, variableName);
             NewExpression newFilterResult = Expression.New(typeof(FilterResult<T?>).GetConstructor([typeof(bool), typeof(T?)])??
-                throw new Exception("Constructor not found"), flag, value);
+               throw new Exception("Constructor not found"), flag, value);
             ParameterExpression resultExpression = Expression.Parameter(typeof(FilterResult<T?>), variableName);
             return WriteFilterResultParametr(writer, key, newFilterResult, resultExpression);
         }
@@ -117,7 +143,7 @@ namespace BotCore.FilterRouter.Extensions
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
             return writer.CreateFilterResultParameterClass<T, TUser>(value, flag, keyResult
 #if DEBUG
-                , $"{Path.GetFileName(file)}_{functionName}_{key}"
+                , GenerateVarableName(file, functionName, key)
 #endif
                 );
         }
@@ -137,10 +163,16 @@ namespace BotCore.FilterRouter.Extensions
             TryGenerateKey(key, lineMember, functionName, file, out var keyResult);
             return writer.CreateFilterResultParameterStruct<T, TUser>(value, flag, keyResult
 #if DEBUG
-                , $"{Path.GetFileName(file)}_{functionName}_{key}"
+                , GenerateVarableName(file, functionName, key)
 #endif
                 );
         }
+#if DEBUG
+        private static string GenerateVarableName(string? file, string? functionName, string? key)
+        {
+            return new string($"{Path.GetFileName(file)}_{functionName}_{key}".Where(x => char.IsLetter(x) || x == '_').ToArray());
+        }
+#endif
 
         private static bool TryGenerateKey(string? key, int lineMember, string? functionName, string? file, out string? keyResult)
         {

@@ -117,11 +117,16 @@ namespace BotCore.FilterRouter.Utils
                     valuesFilters[attr.Position] = null;
                     continue;
                 }
+                Type searchType = currentParametr.ParameterType;
+                if (currentParametr.ParameterType.IsGenericType && currentParametr.ParameterType.GetGenericTypeDefinition() == typeof(FilterResult<>))
+                {
+                }
                 var searchIndex = valuesFilters.FindIndex(x =>
                     x != null &&
                     x.Type.IsGenericType &&
                     x.Type.GetGenericTypeDefinition() == typeof(FilterResult<>) &&
                     x.Type.GenericTypeArguments[0] == currentParametr.ParameterType);
+                var r = valuesFilters.First().Type.GenericTypeArguments[0];
                 if (searchIndex == -1)
                 {
                     inputParametrs.Add(writerExpression.GetService(currentParametr.ParameterType));

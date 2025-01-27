@@ -2,6 +2,7 @@
 using BotCore.Interfaces;
 using BotCore.Models;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 #pragma warning disable IDE0079 // Удалить ненужное подавление
 #pragma warning disable CS8321  // Локальная функция объявлена, но не используется
@@ -43,6 +44,21 @@ namespace BotCore.Demo
         static async Task KeyboardHendlerBotCoreProject(IUpdateContext<User> context)
         {
             await context.Reply("https://github.com/BocmenDen/BotCore");
+        }
+
+        [RegexFilter<User>(@"\b(?:https?://|www\.)\S+\b", RegexOptions.IgnoreCase | RegexOptions.Compiled, ReturnType.Match)]
+        [FilterPriority(1)]
+        static async Task LinkHendlerBotCoreProject(IUpdateContext<User> context, Match link)
+        {
+            try
+            {
+                using HttpClient httpClient = new();
+                await context.Reply((await httpClient.GetStringAsync(link.Value))[..4096]); // TODO подобные ограничения нужно решать в самих реализациях клиентов или в виде вспомогательных прослоек
+            }
+            catch (Exception ex)
+            {
+                await context.Reply(ex.Message);
+            }
         }
     }
 }

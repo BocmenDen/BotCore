@@ -4,5 +4,7 @@
     {
         public readonly bool IsSuccess = isSuccess;
         public readonly T? Value = value;
+
+        public override string? ToString() => Value?.ToString();
     }
 }
