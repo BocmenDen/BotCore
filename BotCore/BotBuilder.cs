@@ -24,7 +24,7 @@ namespace BotCore
                     parameters[1].ParameterType == typeof(IServiceCollection) &&
                     parameters[2].ParameterType == typeof(Type) &&
                     parameters[3].ParameterType == typeof(Type))
-                    yield return new(attr.ServiceName, (context, services, serviceType, implementationType) => method.Invoke(null, [context, services, serviceType, implementationType]));
+                    yield return new(attr.ServiceName, method.CreateDelegate<RegisterService>());
             }
             yield break;
         }
@@ -38,21 +38,10 @@ namespace BotCore
             {
                 foreach (var implementationType in assembly.GetTypes())
                 {
-                    ServiceAttribute? attr;
-                    Type type = implementationType;
-
-                    attr = (ServiceAttribute?)implementationType.GetCustomAttribute(typeof(ServiceAttribute<>), false);
-                    if (attr != null)
-                    {
-                        type = attr.GetType().GenericTypeArguments[0];
-                    }
-                    else
-                    {
-                        attr = (ServiceAttribute?)implementationType.GetCustomAttribute(typeof(ServiceAttribute), false);
-                        if (attr == null) continue;
-                    }
+                    ServiceAttribute? attr = implementationType.GetCustomAttribute<ServiceAttribute>();
+                    if (attr == null) continue;
                     var register = _providersRegistrationService[attr.LifetimeType];
-                    register(context, services, type, implementationType);
+                    register(context, services, attr.Type ?? implementationType, implementationType);
                 }
             });
             return builder;
@@ -74,7 +63,7 @@ namespace BotCore
             {
                 s.AddSingleton<T>();
                 s.AddHostedService((s) => s.GetRequiredService<T>());
-                s.AddSingleton<IClientBot<IUser, IUpdateContext<IUser>>, T>();
+                s.AddSingleton(typeof(IClientBot<IUser, IUpdateContext<IUser>>), (s) => s.GetRequiredService<T>());
             });
         }
 
