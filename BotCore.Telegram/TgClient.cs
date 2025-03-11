@@ -1,5 +1,4 @@
-﻿using BotCore.Attributes;
-using BotCore.Base;
+﻿using BotCore.Base;
 using BotCore.Interfaces;
 using BotCore.Models;
 using BotCore.Services;
@@ -13,8 +12,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace BotCore.Tg
 {
-    [Service(ServiceType.Singltone)]
-    public partial class TgClient<TUser, TDB> : ClientBot<TUser, UpdateContext<TUser>>, IDisposable
+    public partial class TgClient<TUser, TDB> : ClientBot<TUser, UpdateContext<TUser>>
         where TUser : IUser, IUserTgExtension
         where TDB : IDB
     {
@@ -38,7 +36,7 @@ namespace BotCore.Tg
             _database=database;
         }
 
-        public override async Task Run(CancellationToken token = default)
+        protected override async Task ExecuteAsync(CancellationToken token = default)
         {
             Task task = BotClient.ReceiveAsync(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken: token);
             string botName = (await BotClient.GetMyName(cancellationToken: token)).Name;

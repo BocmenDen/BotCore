@@ -4,6 +4,6 @@
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
-        public event Func<TContext, Task> Update;
+        public event Func<TContext, Task>? Update;
     }
 }
