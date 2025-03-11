@@ -1,7 +1,9 @@
-﻿using BotCore.FilterRouter.Attributes;
+﻿using AgileObjects.ReadableExpressions;
+using BotCore.FilterRouter.Attributes;
 using BotCore.FilterRouter.Extensions;
 using BotCore.FilterRouter.Models;
 using BotCore.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -9,29 +11,43 @@ namespace BotCore.FilterRouter.Utils
 {
     public static class BuilderFilters
     {
-        public static Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction> CompileFilters<TUser>(MethodInfo method)
+        public static Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction> CompileFilters<TUser>(ILogger? logger, MethodInfo method)
             where TUser : IUser
         {
-            if (method.IsGenericMethod) throw new Exception("Метод не может быть обобщенным");
-            WriterExpression<TUser> writerExpression = new();
-            LabelTarget skipOtherFilters = Expression.Label(typeof(EvaluatedAction), "skipOtherFilters");
-            ApplayFilters(writerExpression, method, skipOtherFilters, out var resultFilter, out var valuesFilters);
-            var methodCall = ApplayArguments(writerExpression, method, valuesFilters);
-            var methodFunc = CastMethodToFunction(writerExpression, method, methodCall);
-            var result = Expression.New(
-                typeof(EvaluatedAction).GetConstructors()[0],
-                resultFilter,
-                methodFunc
-            );
-            writerExpression.WriteBody(Expression.Return(skipOtherFilters, result));
-            writerExpression.WriteBody(Expression.Label(skipOtherFilters, Expression.Constant(new EvaluatedAction(false, null))));
-            Expression finalBlock = Expression.Block(writerExpression.GetParameterExpressions(), writerExpression);
-            Expression<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>> finalLambda =
-                Expression.Lambda<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>>(
-                        finalBlock,
-                        [writerExpression.ServiceProvider, writerExpression.ContextParameter]
-                    );
-            return finalLambda.Compile();
+            try
+            {
+                if (method.IsGenericMethod) throw new Exception("Метод не может быть обобщенным");
+                WriterExpression<TUser> writerExpression = new();
+                LabelTarget skipOtherFilters = Expression.Label(typeof(EvaluatedAction), "skipOtherFilters");
+                ApplayFilters(writerExpression, method, skipOtherFilters, out var resultFilter, out var valuesFilters);
+                var methodCall = ApplayArguments(writerExpression, method, valuesFilters);
+                var methodFunc = CastMethodToFunction(writerExpression, method, methodCall);
+                var result = Expression.New(
+                    typeof(EvaluatedAction).GetConstructors()[0],
+                    resultFilter,
+                    methodFunc
+                );
+                writerExpression.WriteBody(Expression.Return(skipOtherFilters, result));
+                writerExpression.WriteBody(Expression.Label(skipOtherFilters, Expression.Constant(new EvaluatedAction(false, null))));
+                Expression finalBlock = Expression.Block(writerExpression.GetParameterExpressions(), writerExpression);
+                Expression<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>> finalLambda =
+                    Expression.Lambda<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>>(
+                            finalBlock,
+                            [writerExpression.ServiceProvider, writerExpression.ContextParameter]
+                        );
+                var resultCompile = finalLambda.Compile();
+#if DEBUG
+                logger?.LogDebug("Фильтр {method} успешно скомпилирован в {expression}", method, finalLambda.ToReadableString());
+#else
+                logger?.LogDebug("Фильтр {method} успешно скомпилирован", method);
+#endif
+                return resultCompile;
+            }
+            catch (Exception e)
+            {
+                logger?.LogError(e, "Ошибка при компиляции фильтра {method}", method);
+                throw;
+            }
         }
 
         private static void ApplayFilters<TUser>(
@@ -66,8 +82,9 @@ namespace BotCore.FilterRouter.Utils
                 return;
             }
             ConstantExpression constantExitFalseExpressionLambda1 = Expression.Constant(false);
-            foreach (ParameterExpression parameter in attributes.Where(x => x.IsReturnValue).Select(x => x.GetExpression(writerExpression)).Cast<ParameterExpression>())
+            foreach (BaseFilterAttribute<TUser> filter in attributes.Where(x => x.IsReturnValue))
             {
+                ParameterExpression parameter = (filter.GetExpression(writerExpression) as ParameterExpression)!;
                 bool searchFlag = valuesFilters.Any(x => x == parameter);
                 valuesFilters.Add(parameter);
                 if (searchFlag) continue;
@@ -77,7 +94,7 @@ namespace BotCore.FilterRouter.Utils
                 else if (parameter.Type == typeof(bool))
                     flagProperty = parameter;
                 else
-                    throw new Exception("Возвращаемый тип не поддерживается");
+                    throw new Exception($"Возвращаемый тип не поддерживается у атрибута {filter}");
                 writerExpression.WriteBody(Expression.IfThen(flagProperty, Expression.Block(Expression.Assign(resultFilter, flagProperty), Expression.Return(skipOtherFilters, Expression.Constant(new EvaluatedAction(true, null))))));
             }
         }
@@ -107,26 +124,21 @@ namespace BotCore.FilterRouter.Utils
                 var attr = currentParametr.GetCustomAttribute<FilterResultPositionAttribute>();
                 if (attr != null)
                 {
-                    if (attr.Position >= valuesFilters.Count) throw new Exception("Позиция результата фильтра не найдена");
+                    if (attr.Position >= valuesFilters.Count) throw new Exception($"Позиция параметра {attr.Position} превышает количество результатов от фильтров");
                     var valueFilter = valuesFilters[attr.Position]!;
                     if (!valueFilter.Type.IsGenericType || valueFilter.Type.GetGenericTypeDefinition() != typeof(FilterResult<>))
-                        throw new Exception("Тип параметра не является FilterResult");
+                        throw new Exception($"Параметр с позицией {attr.Position} отмечен как результат фильтра но он не реализован через FilterResult");
                     if (valueFilter.Type.GenericTypeArguments.First() != currentParametr.ParameterType)
-                        throw new Exception("Тип параметра не совпадает с типом FilterResult");
+                        throw new Exception($"Тип параметра с позицией {attr.Position} не совпадает с типом указанным в FilterResult");
                     inputParametrs.Add(Expression.Field(valueFilter, nameof(FilterResult<object>.Value)));
                     valuesFilters[attr.Position] = null;
                     continue;
-                }
-                Type searchType = currentParametr.ParameterType;
-                if (currentParametr.ParameterType.IsGenericType && currentParametr.ParameterType.GetGenericTypeDefinition() == typeof(FilterResult<>))
-                {
                 }
                 var searchIndex = valuesFilters.FindIndex(x =>
                     x != null &&
                     x.Type.IsGenericType &&
                     x.Type.GetGenericTypeDefinition() == typeof(FilterResult<>) &&
                     x.Type.GenericTypeArguments[0] == currentParametr.ParameterType);
-                var r = valuesFilters.First().Type.GenericTypeArguments[0];
                 if (searchIndex == -1)
                 {
                     inputParametrs.Add(writerExpression.GetService(currentParametr.ParameterType));
@@ -175,7 +187,7 @@ namespace BotCore.FilterRouter.Utils
             }
             else
             {
-                throw new Exception("Тип возвращаемого значения не поддерживается");
+                throw new Exception("Тип возвращаемого значения метода не поддерживается");
             }
             return Expression.Lambda(result);
         }

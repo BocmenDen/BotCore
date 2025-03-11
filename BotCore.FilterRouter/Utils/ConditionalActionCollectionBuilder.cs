@@ -1,6 +1,7 @@
 ﻿using BotCore.FilterRouter.Attributes;
 using BotCore.FilterRouter.Models;
 using BotCore.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
 
@@ -13,8 +14,8 @@ namespace BotCore.FilterRouter.Utils
         private ConditionalActionCollectionBuilder() { }
 
         public static ConditionalActionCollectionBuilder<TUser> Create() => new();
-        public static ConditionalActionCollectionBuilder<TUser> CreateAutoDetectFromCurrentDomain()
-            => (new ConditionalActionCollectionBuilder<TUser>()).LoadFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        public static ConditionalActionCollectionBuilder<TUser> CreateAutoDetectFromCurrentDomain(ILogger? logger = null)
+            => (new ConditionalActionCollectionBuilder<TUser>()).LoadFromAssemblies(logger, AppDomain.CurrentDomain.GetAssemblies());
 
         public ConditionalActionCollectionBuilder<TUser> Add(Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction> action, int priority = -1)
         {
@@ -28,18 +29,18 @@ namespace BotCore.FilterRouter.Utils
             return this;
         }
 
-        public ConditionalActionCollectionBuilder<TUser> LoadFromAssemblies(params Assembly?[] assemblies)
-            => LoadFromAssemblies(assemblies as IEnumerable<Assembly?>);
+        public ConditionalActionCollectionBuilder<TUser> LoadFromAssemblies(ILogger? logger, params Assembly?[] assemblies)
+            => LoadFromAssemblies(logger, assemblies as IEnumerable<Assembly?>);
 
-        public ConditionalActionCollectionBuilder<TUser> LoadFromAssemblies(IEnumerable<Assembly?> assemblies)
+        public ConditionalActionCollectionBuilder<TUser> LoadFromAssemblies(ILogger? logger, IEnumerable<Assembly?> assemblies)
         {
             if (assemblies == null) return this;
             foreach (var assembly in assemblies)
-                LoadFromAssembly(assembly);
+                LoadFromAssembly(logger, assembly);
             return this;
         }
 
-        public ConditionalActionCollectionBuilder<TUser> LoadFromAssembly(Assembly? assembly)
+        public ConditionalActionCollectionBuilder<TUser> LoadFromAssembly(ILogger? logger, Assembly? assembly)
         {
             if (assembly is null) return this;
             foreach (var type in assembly.GetTypes())
@@ -50,7 +51,7 @@ namespace BotCore.FilterRouter.Utils
                     int priority = -1;
                     if (priorityInfo != null) priority = priorityInfo.Priority;
                     if (priorityInfo == null && !method.GetCustomAttributes<BaseFilterAttribute<TUser>>().Any()) continue;
-                    Add(BuilderFilters.CompileFilters<TUser>(method), priority);
+                    Add(BuilderFilters.CompileFilters<TUser>(logger, method), priority);
                 }
             }
             return this;
