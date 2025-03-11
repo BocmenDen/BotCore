@@ -18,6 +18,7 @@
     {
         Singltone,
         Scoped,
-        Transient
+        Transient,
+        Hosted
     }
 }

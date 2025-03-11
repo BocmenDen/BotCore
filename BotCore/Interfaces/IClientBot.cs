@@ -1,11 +1,10 @@
-﻿namespace BotCore.Interfaces
+﻿using Microsoft.Extensions.Hosting;
+
+namespace BotCore.Interfaces
 {
-    public interface IClientBot<out TUser, out TContext> : IClientBotFunctions, INextLayer<TUser, TContext>, IDisposable
+    public interface IClientBot<out TUser, out TContext> : IClientBotFunctions, INextLayer<TUser, TContext>, IHostedService, IDisposable
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
-        public int Id { get; }
-
-        public Task Run(CancellationToken token = default);
     }
 }

@@ -1,9 +1,10 @@
 ﻿using BotCore.Interfaces;
 using BotCore.Models;
+using Microsoft.Extensions.Hosting;
 
 namespace BotCore.Base
 {
-    public abstract class ClientBot<TUser, TContext> : IClientBot<TUser, TContext>
+    public abstract class ClientBot<TUser, TContext> : BackgroundService, IClientBot<TUser, TContext>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
@@ -19,10 +20,7 @@ namespace BotCore.Base
             await Update.Invoke(update);
         }
 
-        public abstract Task Run(CancellationToken token = default);
-
         public abstract Task Send(TUser user, SendModel send, UpdateModel? reply = null);
         public abstract ButtonSearch? GetIndexButton(UpdateModel update, ButtonsSend buttonsSend);
-        public virtual void Dispose() => GC.SuppressFinalize(this);
     }
 }

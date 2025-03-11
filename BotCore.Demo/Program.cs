@@ -19,8 +19,7 @@ namespace BotCore.Demo
         /// <summary>
         /// Создание и конфигурация хоста
         /// </summary>
-        static IHost ConfigureServices()
-            => BotBuilder.CreateDefaultBuilder()
+        static IHostBuilder ConfigureServices() => BotBuilder.CreateDefaultBuilder()
                 .ConfigureAppConfiguration(app => app.AddUserSecrets(Assembly.GetExecutingAssembly()))
                 .RegisterServices(
                     Assembly.GetAssembly(typeof(Program)),
@@ -36,46 +35,26 @@ namespace BotCore.Demo
                     s.Configure<PooledObjectProviderOptions<DataBase>>(b.Configuration.GetSection("DataBase"));
                 })
                 .RegisterFiltersRouterAuto<User>() // Регистрация фильтров (См. BotCore.Demo.DemoFiltersRouter)
-                .RegisterDBContextOptions((s, c, b) => b.UseSqlite($"Data Source={s.GetRequiredService<IOptions<DataBaseOptions>>().Value.GetPathOrDefault()}"))
-                .Build();
-
-        /// <summary>
-        /// Получение ботов
-        /// </summary>
-        static IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> GetBots(IHost host)
-        {
-            yield return host.Services.GetRequiredService<TgClient<UserTg, DataBase>>();
-            yield break;
-        }
-        /// <summary>
-        /// Подключение ботов к первому слою
-        /// </summary>
-        static void ConnectBotsToLayer(IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> bots, IInputLayer<IUser, IUpdateContext<IUser>> inputLayer)
-        {
-            foreach (var bot in bots)
-                bot.Update += inputLayer.HandleNewUpdateContext;
-        }
-        /// <summary>
-        /// Ожидание завершения работы ботов
-        /// </summary>
-        static void WaitBots(IEnumerable<IClientBot<IUser, IUpdateContext<IUser>>> bots, CancellationToken token = default)
-        {
-            var tasks = bots.Select(x => x.Run(token)).ToArray();
-            Task.WaitAll(tasks, token);
-        }
+                .RegisterDBContextOptions((s, _, b) => b.UseSqlite($"Data Source={s.GetRequiredService<IOptions<DataBaseOptions>>().Value.GetPathOrDefault()}"));
 
         static void Main()
         {
-            IHost host = ConfigureServices();
-            var bots = GetBots(host);
+            IHost host = ConfigureServices()
+                        .RegisterClient<TgClient<UserTg, DataBase>>()
+                        .Build();
+
             var combineUser = host.Services.GetRequiredService<CombineBots<DataBase, User>>();
             var spamFilter = host.Services.GetRequiredService<MessageSpam<User, UpdateContextOneBot<User>>>();
             var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User, UpdateContextOneBot<User>>>();
-            ConnectBotsToLayer(bots, combineUser);
+
+            foreach (var client in host.Services.GetServices<IClientBot<IUser, IUpdateContext<IUser>>>())
+                client.Update += combineUser.HandleNewUpdateContext;
+
             combineUser.Update += spamFilter.HandleNewUpdateContext;
             spamFilter.Update += filterRouting.HandleNewUpdateContext;
             filterRouting.Update += (context) => context.Reply("Извините я Вас не понял");
-            WaitBots(bots);
+
+            host.Run();
         }
     }
 }
