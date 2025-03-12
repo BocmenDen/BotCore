@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BotCore.Models
 {
-    public record class CollectionBotParameters : IDictionary<string, object>
+    public record CollectionBotParameters : IDictionary<string, object>
     {
         private readonly Dictionary<string, object> _otherParameters = [];
 
@@ -23,7 +23,7 @@ namespace BotCore.Models
 
         public CollectionBotParameters(Dictionary<string, object>? otherParameters = null)
             => _otherParameters=otherParameters ?? [];
-        public CollectionBotParameters(IEnumerable<KeyValuePair<string, object>> collection) : this(new Dictionary<string, object>(collection)) { }
+        public CollectionBotParameters(IEnumerable<KeyValuePair<string, object>> collection) : this([.. collection]) { }
         public CollectionBotParameters(CollectionBotParameters? collectionBot)
             => _otherParameters=collectionBot?._otherParameters ?? [];
 
@@ -90,6 +90,6 @@ namespace BotCore.Models
         }
 
 
-        public static implicit operator CollectionBotParameters(Dictionary<string, object> collection) => new(collection);
+        public static implicit operator CollectionBotParameters(Dictionary<string, object> collection) => [.. collection];
     }
 }

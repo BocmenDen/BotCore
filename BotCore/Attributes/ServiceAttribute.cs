@@ -17,7 +17,7 @@
 
     public enum ServiceType
     {
-        Singltone,
+        Singleton,
         Scoped,
         Transient,
         Hosted

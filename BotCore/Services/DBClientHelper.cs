@@ -20,11 +20,11 @@ namespace BotCore.Services
         {
             _dbProvider = dbProvider;
             if (dbProvider is IDisposable disposable) _disponse = () => disposable.Dispose();
-            if (dbProvider is IObjectProvider<IDBUser<TUser, TParameter>> castParametrDB)
+            if (dbProvider is IObjectProvider<IDBUser<TUser, TParameter>> castParameterDB)
             {
-                _createUser = (p) => castParametrDB.TakeObject((db) => db.CreateUser(p));
-                _getUser = (p) => castParametrDB.TakeObject((db) => db.GetUser(p));
-                _getOrCreate = (p) => castParametrDB.TakeObject(async (db) =>
+                _createUser = (p) => castParameterDB.TakeObject((db) => db.CreateUser(p));
+                _getUser = (p) => castParameterDB.TakeObject((db) => db.GetUser(p));
+                _getOrCreate = (p) => castParameterDB.TakeObject(async (db) =>
                 {
                     var user = await db.GetUser(p);
                     bool isCreate = user == null;

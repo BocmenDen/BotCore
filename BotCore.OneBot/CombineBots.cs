@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace BotCore.OneBot
 {
-    [Service(ServiceType.Singltone)]
+    [Service(ServiceType.Singleton)]
     public class CombineBots<TDB, TUser>(TypeNameGenerator typeNameGenerator,
                                          DBClientHelper<TUser, TDB, UserLinkInfo,
                                          ConditionalPooledObjectProvider<TDB>> database,

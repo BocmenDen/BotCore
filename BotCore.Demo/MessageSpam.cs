@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BotCore.Demo
 {
-    [Service(ServiceType.Singltone)]
+    [Service(ServiceType.Singleton)]
     public class MessageSpam<TUser, TContext> : INextLayer<TUser, TContext>, IInputLayer<TUser, TContext>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>

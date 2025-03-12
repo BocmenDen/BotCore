@@ -12,7 +12,7 @@
         public static T? GetOrDefault<T>(this IDictionary<string, object> collection, string key) where T : class
         {
             if (collection.TryGetValue(key, out object? value) && value is T castObject) return castObject!;
-            return default;
+            return null;
         }
     }
 }

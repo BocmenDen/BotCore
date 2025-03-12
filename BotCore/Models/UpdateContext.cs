@@ -3,23 +3,17 @@ using BotCore.Interfaces;
 
 namespace BotCore.Models
 {
-    public record class UpdateContext<TUser> : IUpdateContext<TUser> where TUser : IUser
+    public record UpdateContext<TUser>(ClientBot<TUser, UpdateContext<TUser>> Bot, TUser User, UpdateModel Update) : IUpdateContext<TUser>
+        where TUser : IUser
     {
-        public readonly ClientBot<TUser, UpdateContext<TUser>> Bot;
+        public readonly ClientBot<TUser, UpdateContext<TUser>> Bot = Bot??throw new ArgumentNullException(nameof(Bot));
 
         public IClientBotFunctions BotFunctions => Bot;
 
-        public TUser User { get; private set; }
+        public TUser User { get; private set; } = User;
 
-        public UpdateModel Update { get; private set; }
+        public UpdateModel Update { get; private set; } = Update??throw new ArgumentNullException(nameof(Update));
 
         public Task Reply(SendModel send) => Bot.Send(User, send, Update);
-
-        public UpdateContext(ClientBot<TUser, UpdateContext<TUser>> clientBot, TUser user, UpdateModel update)
-        {
-            Bot=clientBot??throw new ArgumentNullException(nameof(clientBot));
-            User=user;
-            Update=update??throw new ArgumentNullException(nameof(update));
-        }
     }
 }

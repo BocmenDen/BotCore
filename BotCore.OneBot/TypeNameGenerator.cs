@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace BotCore.OneBot
 {
-    [Service(ServiceType.Singltone)]
+    [Service(ServiceType.Singleton)]
     public class TypeNameGenerator
     {
         private readonly Func<Type, string> _generator;

@@ -2,7 +2,7 @@
 
 namespace BotCore.Models
 {
-    public record class SendModel : CollectionBotParameters
+    public record SendModel : CollectionBotParameters
     {
         private IReadOnlyList<MediaSource>? _medias;
 

@@ -1,6 +1,6 @@
 ﻿namespace BotCore.Models
 {
-    public record class UpdateModel : CollectionBotParameters
+    public record UpdateModel : CollectionBotParameters
     {
         private IReadOnlyList<MediaSource>? _medias;
         private string? _message;
