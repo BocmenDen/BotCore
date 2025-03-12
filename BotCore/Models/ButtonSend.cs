@@ -1,12 +1,10 @@
 ﻿namespace BotCore.Models
 {
-    public record class ButtonSend : CollectionBotParameters
+    public record ButtonSend : CollectionBotParameters
     {
         public string Text { get; }
 
-        public ButtonSend(string text) : this(text, null) { }
-
-        public ButtonSend(string text, CollectionBotParameters? collectionBotParameters) : base(collectionBotParameters)
+        public ButtonSend(string text, CollectionBotParameters? collectionBotParameters = null) : base(collectionBotParameters)
         {
             Text=text??throw new ArgumentNullException(nameof(text));
         }

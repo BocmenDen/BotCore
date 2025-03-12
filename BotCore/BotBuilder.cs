@@ -46,7 +46,7 @@ namespace BotCore
             });
             return builder;
         }
-        public static IHostBuilder RegisterServices(this IHostBuilder builder, IEnumerable<Assembly?> assemblies)
+        public static IHostBuilder RegisterServices(this IHostBuilder builder, IEnumerable<Assembly?>? assemblies)
         {
             if (assemblies == null) return builder;
             foreach (var assembly in assemblies)
@@ -62,12 +62,12 @@ namespace BotCore
             return builder.ConfigureServices((s) =>
             {
                 s.AddSingleton<T>();
-                s.AddHostedService((s) => s.GetRequiredService<T>());
-                s.AddSingleton(typeof(IClientBot<IUser, IUpdateContext<IUser>>), (s) => s.GetRequiredService<T>());
+                s.AddHostedService((serviceProvider) => serviceProvider.GetRequiredService<T>());
+                s.AddSingleton(typeof(IClientBot<IUser, IUpdateContext<IUser>>), (serviceProvider) => serviceProvider.GetRequiredService<T>());
             });
         }
 
-        [ServiceRegisterProvider(nameof(ServiceType.Singltone))]
+        [ServiceRegisterProvider(nameof(ServiceType.Singleton))]
         internal static void AddSingleton(HostBuilderContext _, IServiceCollection services, Type serviceType, Type implementationType) => services.AddSingleton(serviceType, implementationType);
         [ServiceRegisterProvider(nameof(ServiceType.Scoped))]
         internal static void AddScoped(HostBuilderContext _, IServiceCollection services, Type serviceType, Type implementationType) => services.AddScoped(serviceType, implementationType);

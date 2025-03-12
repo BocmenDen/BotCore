@@ -4,7 +4,7 @@ using BotCore.Interfaces;
 
 namespace BotCore.FilterRouter
 {
-    [Service(ServiceType.Singltone)]
+    [Service(ServiceType.Singleton)]
     public class HandleFilterRouter<TUser, TContext>(IServiceProvider service, IConditionalActionCollection<TUser> conditionalActionCollection) : IInputLayer<TUser, TContext>, INextLayer<TUser, TContext>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>

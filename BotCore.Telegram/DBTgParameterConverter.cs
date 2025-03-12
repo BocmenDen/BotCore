@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 
 namespace BotCore.Tg
 {
-    [Service<IDBClientParameterConverter<Chat>>(ServiceType.Singltone)]
+    [Service<IDBClientParameterConverter<Chat>>(ServiceType.Singleton)]
     public class DBTgParameterConverter : IDBClientParameterConverter<Chat>
     {
         public long ParameterConvert(Chat parameter) => parameter.Id;

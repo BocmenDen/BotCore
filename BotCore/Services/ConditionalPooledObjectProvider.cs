@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace BotCore.Services
 {
-    [Service(ServiceType.Singltone)]
+    [Service(ServiceType.Singleton)]
     public class ConditionalPooledObjectProvider<TObject> : IDisposable, IObjectProvider<TObject>
         where TObject : class
     {

@@ -1,6 +1,6 @@
 ﻿namespace BotCore.Models
 {
-    public record class MediaSource : CollectionBotParameters
+    public record MediaSource : CollectionBotParameters
     {
         public string? Name;
         public string? Type;
