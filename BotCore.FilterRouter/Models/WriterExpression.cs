@@ -4,13 +4,13 @@ using System.Linq.Expressions;
 
 namespace BotCore.FilterRouter.Models
 {
-    public class WriterExpression<TUser> : IEnumerable<Expression>
+    public class WriterExpression<TUser>(Type typeContext) : IEnumerable<Expression>
         where TUser : IUser
     {
         private readonly Dictionary<string, Expression> _expressions = [];
         private readonly List<Expression> _body = [];
         private readonly List<ParameterExpression> _parameterExpressions = [];
-        public readonly ParameterExpression ContextParameter = Expression.Parameter(typeof(IUpdateContext<TUser>));
+        public readonly ParameterExpression ContextParameter = Expression.Parameter(typeContext);
         public readonly ParameterExpression ServiceProvider = Expression.Parameter(typeof(IServiceProvider));
 
         public IEnumerable<ParameterExpression> GetParameterExpressions() => _parameterExpressions.Concat(_expressions.Values.OfType<ParameterExpression>());

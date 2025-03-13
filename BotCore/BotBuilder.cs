@@ -9,7 +9,7 @@ namespace BotCore
 {
     public static class BotBuilder
     {
-        public delegate void RegisterService(HostBuilderContext context, IServiceCollection services, Type serviceType, Type implementationType);
+        public delegate void RegisterService(HostBuilderContext context, IServiceCollection services, Type[] serviceTypes, Type implementationType);
 
         private readonly static Dictionary<string, RegisterService> _providersRegistrationService = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().SelectMany(t => GetMethods(t))).ToDictionary();
         private static IEnumerable<KeyValuePair<string, RegisterService>> GetMethods(Type type)
@@ -22,7 +22,7 @@ namespace BotCore
                 if (parameters.Length == 4 &&
                     parameters[0].ParameterType == typeof(HostBuilderContext) &&
                     parameters[1].ParameterType == typeof(IServiceCollection) &&
-                    parameters[2].ParameterType == typeof(Type) &&
+                    parameters[2].ParameterType == typeof(Type[]) &&
                     parameters[3].ParameterType == typeof(Type))
                     yield return new(attr.ServiceName, method.CreateDelegate<RegisterService>());
             }
@@ -41,7 +41,7 @@ namespace BotCore
                     ServiceAttribute? attr = implementationType.GetCustomAttribute<ServiceAttribute>();
                     if (attr == null) continue;
                     var register = _providersRegistrationService[attr.LifetimeType];
-                    register(context, services, attr.Type ?? implementationType, implementationType);
+                    register(context, services, attr.Types == null || attr.Types.Length == 0 ? [implementationType] : attr.Types, implementationType);
                 }
             });
             return builder;
@@ -68,12 +68,37 @@ namespace BotCore
         }
 
         [ServiceRegisterProvider(nameof(ServiceType.Singleton))]
-        internal static void AddSingleton(HostBuilderContext _, IServiceCollection services, Type serviceType, Type implementationType) => services.AddSingleton(serviceType, implementationType);
+        internal static void AddSingleton(HostBuilderContext _, IServiceCollection services, Type[] serviceTypes, Type implementationType)
+        {
+            var firstType = serviceTypes.First();
+            services.AddSingleton(firstType, implementationType);
+            foreach (var type in serviceTypes.Skip(1))
+                services.AddSingleton(type, (serviceProvider) => serviceProvider.GetRequiredService(firstType));
+        }
         [ServiceRegisterProvider(nameof(ServiceType.Scoped))]
-        internal static void AddScoped(HostBuilderContext _, IServiceCollection services, Type serviceType, Type implementationType) => services.AddScoped(serviceType, implementationType);
+        internal static void AddScoped(HostBuilderContext _, IServiceCollection services, Type[] serviceTypes, Type implementationType)
+        {
+            var firstType = serviceTypes.First();
+            services.AddScoped(firstType, implementationType);
+            foreach (var type in serviceTypes.Skip(1))
+                services.AddScoped(type, (serviceProvider) => serviceProvider.GetRequiredService(firstType));
+        }
         [ServiceRegisterProvider(nameof(ServiceType.Transient))]
-        internal static void AddTransient(HostBuilderContext _, IServiceCollection services, Type serviceType, Type implementationType) => services.AddTransient(serviceType, implementationType);
+        internal static void AddTransient(HostBuilderContext _, IServiceCollection services, Type[] serviceTypes, Type implementationType)
+        {
+            foreach (var type in serviceTypes)
+                services.AddTransient(type, implementationType);
+        }
         [ServiceRegisterProvider(nameof(ServiceType.Hosted))]
-        internal static void AddHosted(HostBuilderContext _, IServiceCollection services, Type __, Type implementationType) => services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IHostedService), implementationType));
+        internal static void AddHosted(HostBuilderContext _, IServiceCollection services, Type[] serviceTypes, Type implementationType)
+        {
+            services.AddSingleton(implementationType);
+            services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IHostedService), (s) => s.GetRequiredService(implementationType)));
+            foreach (var type in serviceTypes)
+            {
+                if (type == implementationType) continue;
+                services.AddSingleton(type, (s) => s.GetRequiredService(implementationType));
+            }
+        }
     }
 }

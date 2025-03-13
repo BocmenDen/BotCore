@@ -53,14 +53,11 @@ namespace BotCore.Demo
         [Key]
         public long Id { get; set; }
 
+        public string? KeyPage { get; set; }
+
         public User()
         {
 
-        }
-
-        public User(long id)
-        {
-            Id=id;
         }
     }
 }

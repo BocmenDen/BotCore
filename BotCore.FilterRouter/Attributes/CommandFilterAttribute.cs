@@ -10,8 +10,8 @@ namespace BotCore.FilterRouter.Attributes
     public class CommandFilterAttribute<TUser>(bool isIgnoreCase, params string[] commands) : BaseFilterAttribute<TUser>(false)
         where TUser : IUser
     {
-        private readonly string[] _commands = isIgnoreCase ? commands.Select(x => x.ToLower()).ToArray() : commands;
-        private readonly bool _isIgnoreCase;
+        private readonly string[] _commands = isIgnoreCase ? [.. commands.Select(x => x.ToLower())] : commands;
+        private readonly bool _isIgnoreCase = isIgnoreCase;
 
         public CommandFilterAttribute(params string[] commands) : this(false, commands) { }
 

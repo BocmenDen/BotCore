@@ -8,19 +8,23 @@ namespace BotCore.FilterRouter.Extensions
 {
     public static class IHostExtensions
     {
-        public static IHostBuilder RegisterFiltersRouter<TUser>(this IHostBuilder builder, IConditionalActionCollection<TUser> conditionalActionCollection)
-            where TUser : IUser => builder.ConfigureServices((context, services) =>
+        public static IHostBuilder RegisterFiltersRouter<TUser, TContext>(this IHostBuilder builder, IConditionalActionCollection<TUser, TContext> conditionalActionCollection)
+            where TUser : IUser
+            where TContext : IUpdateContext<TUser>
+            => builder.ConfigureServices((context, services) =>
             {
                 services.AddSingleton(conditionalActionCollection);
             });
 
-        public static IHostBuilder RegisterFiltersRouterAuto<TUser>(this IHostBuilder builder)
-            where TUser : IUser => builder.ConfigureServices((context, services) =>
+        public static IHostBuilder RegisterFiltersRouterAuto<TUser, TContext>(this IHostBuilder builder)
+            where TUser : IUser
+            where TContext : IUpdateContext<TUser>
+            => builder.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(typeof(IConditionalActionCollection<TUser>), (sp) =>
+                services.AddSingleton(typeof(IConditionalActionCollection<TUser, TContext>), (sp) =>
                 {
-                    ILogger logger = sp.GetRequiredService<ILogger<ConditionalActionCollectionBuilder<TUser>>>();
-                    return ConditionalActionCollectionBuilder<TUser>.CreateAutoDetectFromCurrentDomain(logger).Build();
+                    ILogger logger = sp.GetRequiredService<ILogger<ConditionalActionCollectionBuilder<TUser, TContext>>>();
+                    return ConditionalActionCollectionBuilder<TUser, TContext>.CreateAutoDetectFromCurrentDomain(logger).Build();
                 });
             });
     }

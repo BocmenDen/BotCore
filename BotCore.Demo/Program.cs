@@ -4,6 +4,7 @@ using BotCore.FilterRouter.Extensions;
 using BotCore.Interfaces;
 using BotCore.Models;
 using BotCore.OneBot;
+using BotCore.PageRouter;
 using BotCore.Tg;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +26,8 @@ namespace BotCore.Demo
                     Assembly.GetAssembly(typeof(Program)),
                     Assembly.GetAssembly(typeof(TgClient)),
                     Assembly.GetAssembly(typeof(CombineBots<,>)),
-                    Assembly.GetAssembly(typeof(HandleFilterRouter<,>))
+                    Assembly.GetAssembly(typeof(HandleFilterRouter<,>)),
+                    Assembly.GetAssembly(typeof(HandlePageRouter<,,>))
                 )
                 .ConfigureServices((b, s) =>
                 {
@@ -34,25 +36,30 @@ namespace BotCore.Demo
                     s.Configure<DataBaseOptions>(b.Configuration.GetSection("DataBase"));
                     s.Configure<PooledObjectProviderOptions<DataBase>>(b.Configuration.GetSection("DataBase"));
                 })
-                .RegisterFiltersRouterAuto<User>() // Регистрация фильтров (См. BotCore.Demo.DemoFiltersRouter)
+                .RegisterFiltersRouterAuto<User, UpdateContextOneBot<User>>() // Регистрация фильтров (См. BotCore.Demo.DemoFiltersRouter)
                 .RegisterDBContextOptions((s, _, b) => b.UseSqlite($"Data Source={s.GetRequiredService<IOptions<DataBaseOptions>>().Value.GetPathOrDefault()}"));
 
         static void Main()
         {
             IHost host = ConfigureServices()
                         .RegisterClient<TgClient<UserTg, DataBase>>()
+                        .RegisterPagesInRouter<User, UpdateContextOneBot<User>, string>(
+                            Assembly.GetAssembly(typeof(Program))!
+                        )
                         .Build();
 
             var combineUser = host.Services.GetRequiredService<CombineBots<DataBase, User>>();
             var spamFilter = host.Services.GetRequiredService<MessageSpam<User, UpdateContextOneBot<User>>>();
             var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User, UpdateContextOneBot<User>>>();
+            var pageRouting = host.Services.GetRequiredService<HandlePageRouter<User, UpdateContextOneBot<User>, string>>();
 
             foreach (var client in host.Services.GetServices<IClientBot<IUser, IUpdateContext<IUser>>>())
                 client.Update += combineUser.HandleNewUpdateContext;
 
             combineUser.Update += spamFilter.HandleNewUpdateContext;
             spamFilter.Update += filterRouting.HandleNewUpdateContext;
-            filterRouting.Update += (context) => context.Reply("Извините я Вас не понял");
+            filterRouting.Update += pageRouting.HandleNewUpdateContext;
+            pageRouting.Update += (context) => context.Reply("Извините я Вас не понял");
 
             host.Run();
         }

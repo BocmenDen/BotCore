@@ -3,8 +3,9 @@ using BotCore.Interfaces;
 
 namespace BotCore.FilterRouter
 {
-    public interface IConditionalActionCollection<TUser> : IEnumerable<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>>
+    public interface IConditionalActionCollection<TUser, TContext> : IEnumerable<Func<IServiceProvider, TContext, EvaluatedAction>>
         where TUser : IUser
+        where TContext : IUpdateContext<TUser>
     {
 
     }

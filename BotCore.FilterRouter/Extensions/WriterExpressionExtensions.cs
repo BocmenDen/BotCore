@@ -170,7 +170,7 @@ namespace BotCore.FilterRouter.Extensions
 #if DEBUG
         private static string GenerateVarableName(string? file, string? functionName, string? key)
         {
-            return new string($"{Path.GetFileName(file)}_{functionName}_{key}".Where(x => char.IsLetter(x) || x == '_').ToArray());
+            return new string([.. $"{Path.GetFileName(file)}_{functionName}_{key}".Where(x => char.IsLetter(x) || x == '_')]);
         }
 #endif
 
