@@ -26,8 +26,10 @@ namespace BotCore.EfUserDb
         }
 
         [ServiceRegisterProvider(DBAttribute.DBRegistrationProvaderName)]
-        internal static void AddEFPool(HostBuilderContext context, IServiceCollection services, Type _, Type implementationType)
+        internal static void AddEFPool(HostBuilderContext context, IServiceCollection services, Type[] serviceTypes, Type implementationType)
         {
+            if (serviceTypes.Length > 1) throw new Exception("Для БД количество представлений в данный момент не может быть множественным"); // TODO Fix
+
             if (!(context.Properties.TryGetValue(PropertyConnectToDB, out object? value) && value is Action<IServiceProvider, IConfiguration, DbContextOptionsBuilder> dbBuilder))
                 throw new InvalidOperationException("Не удаётся зарегистрировать БД т.к. не указаны параметры подключения с помощью RegisterDBContextOptions");
 

@@ -1,4 +1,6 @@
-﻿using AgileObjects.ReadableExpressions;
+﻿#if DEBUG
+using AgileObjects.ReadableExpressions;
+#endif
 using BotCore.FilterRouter.Attributes;
 using BotCore.FilterRouter.Extensions;
 using BotCore.FilterRouter.Models;
@@ -11,16 +13,17 @@ namespace BotCore.FilterRouter.Utils
 {
     public static class BuilderFilters
     {
-        public static Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction> CompileFilters<TUser>(ILogger? logger, MethodInfo method)
+        public static Func<IServiceProvider, TContext, EvaluatedAction> CompileFilters<TUser, TContext>(ILogger? logger, MethodInfo method)
             where TUser : IUser
+            where TContext : IUpdateContext<TUser>
         {
             try
             {
                 if (method.IsGenericMethod) throw new Exception("Метод не может быть обобщенным");
-                WriterExpression<TUser> writerExpression = new();
+                WriterExpression<TUser> writerExpression = new(typeof(TContext));
                 LabelTarget skipOtherFilters = Expression.Label(typeof(EvaluatedAction), "skipOtherFilters");
                 ApplayFilters(writerExpression, method, skipOtherFilters, out var resultFilter, out var valuesFilters);
-                var methodCall = ApplayArguments(writerExpression, method, valuesFilters);
+                var methodCall = ApplayArguments<TUser, TContext>(writerExpression, method, valuesFilters);
                 var methodFunc = CastMethodToFunction(writerExpression, method, methodCall);
                 var result = Expression.New(
                     typeof(EvaluatedAction).GetConstructors()[0],
@@ -30,8 +33,8 @@ namespace BotCore.FilterRouter.Utils
                 writerExpression.WriteBody(Expression.Return(skipOtherFilters, result));
                 writerExpression.WriteBody(Expression.Label(skipOtherFilters, Expression.Constant(new EvaluatedAction(false, null))));
                 Expression finalBlock = Expression.Block(writerExpression.GetParameterExpressions(), writerExpression);
-                Expression<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>> finalLambda =
-                    Expression.Lambda<Func<IServiceProvider, IUpdateContext<TUser>, EvaluatedAction>>(
+                Expression<Func<IServiceProvider, TContext, EvaluatedAction>> finalLambda =
+                    Expression.Lambda<Func<IServiceProvider, TContext, EvaluatedAction>>(
                             finalBlock,
                             [writerExpression.ServiceProvider, writerExpression.ContextParameter]
                         );
@@ -99,12 +102,13 @@ namespace BotCore.FilterRouter.Utils
             }
         }
 
-        private static MethodCallExpression ApplayArguments<TUser>(
+        private static MethodCallExpression ApplayArguments<TUser, TContext>(
                 WriterExpression<TUser> writerExpression,
                 MethodInfo method,
                 List<ParameterExpression?> valuesFilters
             )
             where TUser : IUser
+            where TContext : IUpdateContext<TUser>
         {
             var parametrsMethodInfo = method.GetParameters();
             List<Expression> inputParametrs = [];
@@ -116,7 +120,7 @@ namespace BotCore.FilterRouter.Utils
                     inputParametrs.Add(writerExpression.ServiceProvider);
                     continue;
                 }
-                if (currentParametr.ParameterType == typeof(IUpdateContext<TUser>))
+                if (typeof(TContext).IsAssignableTo(currentParametr.ParameterType))
                 {
                     inputParametrs.Add(writerExpression.ContextParameter);
                     continue;

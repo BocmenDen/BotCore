@@ -1,6 +1,8 @@
 ﻿using BotCore.FilterRouter.Attributes;
 using BotCore.Interfaces;
 using BotCore.Models;
+using BotCore.OneBot;
+using BotCore.PageRouter;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
@@ -13,7 +15,7 @@ namespace BotCore.Demo
     public static class DemoFiltersRouter
     {
         [ResourceKey("keyboard")]
-        readonly static ButtonsSend keyboard = new([["Мой GitHub", "Ссылка на этот проект"]]);
+        readonly static ButtonsSend keyboard = new([["Мой GitHub", "Ссылка на этот проект"], ["DemoPage 1", "DemoPage 2"]]);
 
         [CommandFilter<User>("start")]
         [MessageTypeFilter<User>(UpdateType.Command)]
@@ -28,7 +30,7 @@ namespace BotCore.Demo
         [FilterPriority(0)]
         static bool ListenerKeyboard(ILogger<Program> logger, IUpdateContext<User> context, ButtonSearch? buttonSearch)
         {
-            logger.LogInformation("Пользователь {user}, нажал на кнопку {buttonText}", context.User, buttonSearch?.Button.Text);
+            logger.LogInformation("Пользователь {user}, нажал на кнопку \"{buttonText}\"", context.User, buttonSearch?.Button.Text);
             return false;
         }
 
@@ -59,6 +61,16 @@ namespace BotCore.Demo
             {
                 await context.Reply(ex.Message);
             }
+        }
+
+        [ButtonsFilter<User>("keyboard", 1)]
+        [FilterPriority(1)]
+        static async Task OpenPage(UpdateContextOneBot<User> context, ButtonSearch? buttonSearch, HandlePageRouter<User, UpdateContextOneBot<User>, string> routing)
+        {
+            if (buttonSearch!.Value.Column == 0)
+                await routing.Navigate(context, "DemoPage1");
+            if (buttonSearch!.Value.Column == 1)
+                await routing.Navigate(context, "DemoPage2");
         }
     }
 }

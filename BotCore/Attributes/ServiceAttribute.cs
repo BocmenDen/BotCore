@@ -1,11 +1,11 @@
 ﻿namespace BotCore.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class ServiceAttribute(string serviceType, Type? type = null) : Attribute
+    public class ServiceAttribute(string serviceType, params Type[] types) : Attribute
     {
-        public readonly Type? Type = type;
+        public readonly Type[] Types = types;
         public readonly string LifetimeType = string.IsNullOrWhiteSpace(serviceType) ? throw new ArgumentException(nameof(serviceType)) : serviceType;
-        public ServiceAttribute(ServiceType serviceType, Type? type = null) : this(serviceType.ToString(), type) { }
+        public ServiceAttribute(ServiceType serviceType, params Type[] types) : this(serviceType.ToString(), types) { }
     }
 
     [AttributeUsage(AttributeTargets.Class)]
