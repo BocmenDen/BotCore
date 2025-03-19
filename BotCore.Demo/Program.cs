@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Reflection;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BotCore.Demo
 {
@@ -46,6 +47,7 @@ namespace BotCore.Demo
                         .RegisterPagesInRouter<User, UpdateContextOneBot<User>, string>(
                             Assembly.GetAssembly(typeof(Program))!
                         )
+                        .ConfigureServices((s) => s.AddMemoryCache())
                         .Build();
 
             var combineUser = host.Services.GetRequiredService<CombineBots<DataBase, User>>();

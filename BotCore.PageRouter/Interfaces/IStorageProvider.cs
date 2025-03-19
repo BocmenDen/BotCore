@@ -2,6 +2,6 @@
 {
     public interface IStorageProvider
     {
-        public Task Save();
+        public Task Save<T>(T model);
     }
 }
