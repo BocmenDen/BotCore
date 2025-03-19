@@ -17,12 +17,12 @@ namespace BotCore.PageRouter.Models
         {
             ILogger logger = serviceProvider.GetRequiredService<ILogger<PageFactoryBuilder<TUser, TContext, TKey>>>();
             logger.LogInformation("Начало компиляции страниц");
-            Dictionary<TKey, Func<IServiceProvider, TUser, IPage<TUser, TContext>>> pages = [];
+            Dictionary<TKey, PageFactoryCompiler.CreatePage<TUser, TContext>> pages = [];
             foreach (var (key, compiler, type) in _pages)
             {
                 try
                 {
-                    pages.Add(key, PageFactoryCompiler.Build<TUser, TContext>(type, compiler, logger));
+                    pages.Add(key, PageFactoryCompiler.Build<TUser, TContext, TKey>(type, key, serviceProvider, compiler));
                     logger.LogDebug("Страница {page} успешно скомпилирована компилятором {compiler}", type.FullName, compiler);
                 }
                 catch (Exception ex)

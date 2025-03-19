@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 namespace BotCore.Demo.Pages
 {
     [Page<string>("DemoPage2")]
-    public class DemoPage2<TUser, TContext> : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>
+    public class DemoPage2<TUser, TContext> : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>, IBindNavigateFunction<TUser, TContext, string>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
@@ -44,6 +44,11 @@ namespace BotCore.Demo.Pages
             string jsonResponse = await response.Content.ReadAsStringAsync();
             JObject json = JObject.Parse(jsonResponse);
             return json["extract"]?.ToString() ?? "Нет краткого описания.";
+        }
+
+        public void BindNavigateFunction(Func<TContext, string, Task> navigateFunction)
+        {
+
         }
     }
 }
