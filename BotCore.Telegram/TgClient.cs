@@ -137,7 +137,7 @@ namespace BotCore.Tg
             {
                 for (int j = 0; j < buttonsSend.Buttons[i].Count; j++)
                 {
-                    if (buttonsSend.Buttons[i][j].Text == updateTg.Message?.Text || buttonsSend.Buttons[i][j].Text == updateTg.InlineQuery?.Query)
+                    if (buttonsSend.Buttons[i][j].Text == updateTg.Message?.Text || buttonsSend.Buttons[i][j].Text == updateTg.InlineQuery?.Query || buttonsSend.Buttons[i][j].Text.GetHashCode().ToString() == updateTg.CallbackQuery?.Data) // TODO оптимизировать за счёт кешировани buttonsSend.Buttons[i][j].Text.GetHashCode().ToString()
                     {
                         return new ButtonSearch(i, j, buttonsSend.Buttons[i][j]);
                     }

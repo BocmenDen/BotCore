@@ -30,7 +30,7 @@ namespace BotCore.Tg
                 {
                     return new InlineKeyboardButton(b.Text)
                     {
-                        CallbackData = b.Text,
+                        CallbackData = b.Text.GetHashCode().ToString(),
                         Url = b.GetOrDefault<string>(nameof(InlineKeyboardButton.Url))
                     };
                 }))
