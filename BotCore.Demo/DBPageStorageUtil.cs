@@ -10,7 +10,6 @@ namespace BotCore.Demo
     [Service(ServiceType.Singleton, typeof(IDBUserPageKey<User, string>))]
     public class DBPageStorageUtil(ConditionalPooledObjectProvider<DataBase> db) : IDBUserPageKey<User, string>,
                                                                                    IDBUserPageModel<User>,
-                                                                                   IStorageProvider,
                                                                                    IDBUserPageParameter<User>
     {
         private readonly ConditionalPooledObjectProvider<DataBase> _db = db;
@@ -23,11 +22,6 @@ namespace BotCore.Demo
         }
 
         object? IDBUserPageParameter<User>.GetParameter(User user)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task IStorageProvider.Save<T>(T model)
         {
             throw new NotImplementedException();
         }

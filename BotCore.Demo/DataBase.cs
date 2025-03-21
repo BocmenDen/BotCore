@@ -21,7 +21,7 @@ namespace BotCore.Demo
             Database.EnsureCreated();
         }
 
-        public async Task<UserTg> CreateUser(Chat chat)
+        public async ValueTask<UserTg> CreateUser(Chat chat)
         {
             UserTg user = new() { Id = chat.Id };
             var e = UsersTg.Add(user);
@@ -30,7 +30,7 @@ namespace BotCore.Demo
             return user;
         }
 
-        public async Task<User> CreateUser(UserLinkInfo parameter)
+        public async ValueTask<User> CreateUser(UserLinkInfo parameter)
         {
             User user = new();
             var e2 = Users.Add(user);
@@ -45,8 +45,12 @@ namespace BotCore.Demo
             return user;
         }
 
-        public Task<UserTg?> GetUser(Chat chat) => findTgUser(this, chat.Id);
-        public async Task<User?> GetUser(UserLinkInfo parameter) =>
+        public async ValueTask<UserTg?> GetUser(Chat chat)
+        {
+            var result = await findTgUser(this, chat.Id);
+            return result;
+        }
+        public async ValueTask<User?> GetUser(UserLinkInfo parameter) =>
             (await UsersShared.Include(x => x.SharedUser).AsNoTracking().FirstOrDefaultAsync(x => x.IdSource == parameter.SourceId && x.NameSource == parameter.SourceName))?.SharedUser;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
