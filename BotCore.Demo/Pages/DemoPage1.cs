@@ -1,14 +1,12 @@
 ﻿using BotCore.Interfaces;
 using BotCore.PageRouter.Attributes;
 using BotCore.PageRouter.Interfaces;
-using BotCore.PageRouter.Models;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace BotCore.Demo.Pages
 {
     [PageCacheable<string>("DemoPage1")]
-    public class DemoPage1<TUser, TContext>(ILogger<DemoPage1<TUser, TContext>> logger, IMemoryCache? memoryCache = null) : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>, IBindNavigateFunction<TUser, TContext, string>
+    public class DemoPage1<TUser, TContext>(ILogger<DemoPage1<TUser, TContext>> logger) : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>, IBindNavigateFunction<TUser, TContext, string>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
@@ -18,22 +16,11 @@ namespace BotCore.Demo.Pages
         {
         }
 
-        public void BindNavigateParameter(object? parameter)
-        {
-        }
+        public Task HandleNewUpdateContext(TContext context) => context.Reply(context.Update.Message!);
 
-        public void BindStorageModel(StorageModel<object> model)
+        public async Task OnNavigate(TContext context)
         {
-        }
-
-        public Task HandleNewUpdateContext(TContext context)
-        {
-            return context.Reply(context.Update.Message!);
-        }
-
-        public Task OnNavigate(TContext context)
-        {
-            return context.Reply("Вы перешли на страницу повторюшки");
+            await context.Reply("Вы перешли на страницу повторюшки");
         }
 
         public void PageLoaded(TUser user)

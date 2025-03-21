@@ -20,6 +20,8 @@ namespace BotCore.Services
 
         public void TakeObject(Action<TObject> func) => func(Object);
         public T TakeObject<T>(Func<TObject, T> func) => func(Object);
+        public Task<T> TakeObjectAsync<T>(Func<TObject, Task<T>> func) => func(Object);
+        public ValueTask<T> TakeObjectAsync<T>(Func<TObject, ValueTask<T>> func) => func(Object);
 
         public void Dispose()
         {

@@ -4,6 +4,7 @@ using BotCore.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
+using System.Threading.Tasks.Sources;
 
 namespace BotCore.Services
 {
@@ -15,6 +16,8 @@ namespace BotCore.Services
         private readonly Action<TObject> _return;
         private readonly Action? _disponse;
 
+        private readonly Action<Action<TObject>> _takeObjectNoRet;
+
         public ConditionalPooledObjectProvider(
             IServiceProvider serviceProvider,
             IFactory<TObject>? factory = null,
@@ -25,22 +28,26 @@ namespace BotCore.Services
             if (factory == null)
             {
                 _get = serviceProvider.GetRequiredService<TObject>;
+                _takeObjectNoRet = (f) => f(_get());
                 _return = (_) => { };
                 return;
             }
-            Action<TObject>? clearF = null;
-            if (reset != null)
-                clearF = reset.Clear;
             ObjectPool<TObject> pool = new DefaultObjectPoolProvider()
             {
                 MaximumRetained = conditionalPooledObjectProviderOptions?.Value.MaximumRetained ?? Environment.ProcessorCount * 2
-            }.Create(new PooledObjectPolicyDefault<TObject>(factory.Create, clearF));
+            }.Create(new PooledObjectPolicyDefault<TObject>(factory.Create, reset == null ? null : reset.Clear));
 
             if (pool is IDisposable disposable)
                 _disponse = disposable.Dispose;
 
             _get = pool.Get;
             _return = pool.Return;
+            _takeObjectNoRet = (a) =>
+            {
+                TObject obj = pool.Get();
+                a(obj);
+                pool.Return(obj);
+            };
         }
 
         public TObject Get() => _get();
@@ -53,21 +60,27 @@ namespace BotCore.Services
             GC.SuppressFinalize(this);
         }
 
-        public void TakeObject(Action<TObject> func)
-        {
-            TObject obj = Get();
-            func.Invoke(obj);
-            Return(obj);
-        }
+        public void TakeObject(Action<TObject> func) => _takeObjectNoRet(func);
 
         public T TakeObject<T>(Func<TObject, T> func)
         {
             TObject obj = Get();
             var value = func.Invoke(obj);
-            if (value is Task task)
-                task.ConfigureAwait(false).GetAwaiter().OnCompleted(() => Return(obj));
-            else
-                Return(obj);
+            Return(obj);
+            return value;
+        }
+        public async Task<T> TakeObjectAsync<T>(Func<TObject, Task<T>> func)
+        {
+            TObject obj = Get();
+            var value = await func.Invoke(obj);
+            Return(obj);
+            return value;
+        }
+        public async ValueTask<T> TakeObjectAsync<T>(Func<TObject, ValueTask<T>> func)
+        {
+            TObject obj = Get();
+            var value = await func.Invoke(obj);
+            Return(obj);
             return value;
         }
     }
