@@ -19,7 +19,7 @@
     <ProjectReference Include="..\BotCore.OneBot\BotCore.OneBot.csproj" />
     <ProjectReference Include="..\BotCore.PageRouter\BotCore.PageRouter.csproj" />
     <ProjectReference Include="..\BotCore\BotCore.csproj" />
-    <ProjectReference Include="..\BotCore.EfUserDb\BotCore.EfUserDb.csproj" />
+    <ProjectReference Include="..\BotCore.EfUserDb\BotCore.EfDb.csproj" />
     <ProjectReference Include="..\BotCore.SpamBroker\BotCore.SpamBroker.csproj" />
     <ProjectReference Include="..\BotCore.Telegram\BotCore.Tg.csproj" />
   </ItemGroup>

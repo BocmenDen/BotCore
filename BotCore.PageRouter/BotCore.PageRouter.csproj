@@ -4,7 +4,25 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>$(AssemblyName)</Title>
+    <Version>1.0.0-alpha-1</Version>
+    <Authors>BocmenDen</Authors>
+    <Description>BotCore.PageRouter — модуль для маршрутизации страниц в BotCore</Description>
+    <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
+    <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\AIHackathon\BotCore\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AgileObjects.ReadableExpressions" Version="4.1.3" />

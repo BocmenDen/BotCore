@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.Demo", "BotCore.Dem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.SpamBroker", "BotCore.SpamBroker\BotCore.SpamBroker.csproj", "{C28F018B-9949-4A7E-A627-2A55235F50FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.EfUserDb", "BotCore.EfUserDb\BotCore.EfUserDb.csproj", "{8BB3C2FC-B98E-43A4-87E9-BD9C56609C83}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.EfDb", "BotCore.EfUserDb\BotCore.EfDb.csproj", "{8BB3C2FC-B98E-43A4-87E9-BD9C56609C83}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.OneBot", "BotCore.OneBot\BotCore.OneBot.csproj", "{FB5E9742-1B9E-4756-8745-95DFAA28A4D0}"
 EndProject

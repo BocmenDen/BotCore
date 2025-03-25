@@ -4,17 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>$(AssemblyName)</Title>
+    <PackageId>BotCore.EfDb</PackageId>
+    <Title>BotCore.EfDb</Title>
     <Version>1.0.0-alpha-1</Version>
     <Authors>BocmenDen</Authors>
-    <Description>BotCore.SpamBroker — модуль для обработки спама в BotCore</Description>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
     <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>BotCore.EfDb— модуль для удобной интеграции базы данных в BotCore с использованием Entity Framework</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +22,10 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
