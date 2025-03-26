@@ -63,7 +63,7 @@ namespace BotCore
             {
                 s.AddSingleton<T>();
                 s.AddHostedService((serviceProvider) => serviceProvider.GetRequiredService<T>());
-                s.AddSingleton(typeof(IClientBot<IUser, IUpdateContext<IUser>>), (serviceProvider) => serviceProvider.GetRequiredService<T>());
+                s.AddSingleton(typeof(IClientBot), (serviceProvider) => serviceProvider.GetRequiredService<T>());
             });
         }
 

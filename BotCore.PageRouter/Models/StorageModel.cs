@@ -1,6 +1,4 @@
-﻿using BotCore.PageRouter.Interfaces;
-
-namespace BotCore.PageRouter.Models
+﻿namespace BotCore.PageRouter.Models
 {
     public class StorageModel<T>(T value, Func<T, Task> save)
         where T : new()

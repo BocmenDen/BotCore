@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Reflection;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace BotCore.Demo
 {
@@ -55,7 +54,7 @@ namespace BotCore.Demo
             var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User, UpdateContextOneBot<User>>>();
             var pageRouting = host.Services.GetRequiredService<HandlePageRouter<User, UpdateContextOneBot<User>, string>>();
 
-            foreach (var client in host.Services.GetServices<IClientBot<IUser, IUpdateContext<IUser>>>())
+            foreach (var client in host.Services.GetServices<IClientBot>())
                 client.Update += combineUser.HandleNewUpdateContext;
 
             combineUser.Update += spamFilter.HandleNewUpdateContext;
