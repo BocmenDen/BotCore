@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.IO;
-using System.Reflection;
-using System;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace BotCoreGenerator.PageRouter.Mirror
 {

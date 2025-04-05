@@ -5,7 +5,7 @@
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<Title>$(AssemblyName)</Title>
-		<Version>1.0.0-alpha-1</Version>
+		<Version>1.0.1-alpha-1</Version>
 		<Authors>BocmenDen</Authors>
 		<Copyright>Copyright (c) 2025 BocmenDen</Copyright>
 		<PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
@@ -27,6 +27,10 @@
 
 	<ItemGroup>
 		<Compile Remove="GenerateModelMirrorAttribute.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="bin\Debug\netstandard2.0\\BotCoreGenerator.PageRouter.Mirror.dll" />
 	</ItemGroup>
 
 	<ItemGroup>

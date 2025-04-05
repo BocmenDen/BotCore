@@ -1,6 +1,6 @@
-﻿#if DEBUG
-using AgileObjects.ReadableExpressions;
-#endif
+﻿//#if DEBUG
+//using AgileObjects.ReadableExpressions;
+//#endif
 using BotCore.FilterRouter.Attributes;
 using BotCore.FilterRouter.Extensions;
 using BotCore.FilterRouter.Models;
@@ -39,11 +39,11 @@ namespace BotCore.FilterRouter.Utils
                             [writerExpression.ServiceProvider, writerExpression.ContextParameter]
                         );
                 var resultCompile = finalLambda.Compile();
-#if DEBUG
-                logger?.LogDebug("Фильтр {method} успешно скомпилирован в {expression}", method, finalLambda.ToReadableString());
-#else
+                //#if DEBUG
+                //                logger?.LogDebug("Фильтр {method} успешно скомпилирован в {expression}", method, finalLambda.ToReadableString());
+                //#else
                 logger?.LogDebug("Фильтр {method} успешно скомпилирован", method);
-#endif
+                //#endif
                 return resultCompile;
             }
             catch (Exception e)

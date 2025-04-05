@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <Version>1.0.0-alpha-1</Version>
+    <Version>1.0.1-alpha-1</Version>
     <Authors>BocmenDen</Authors>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
     <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\AIHackathon\BotCore\LICENSE">
+    <None Include="..\..\BotCore\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

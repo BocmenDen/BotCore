@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <Version>1.0.0-alpha-1</Version>
+    <Version>1.0.1-alpha-1</Version>
     <Authors>BocmenDen</Authors>
     <Description>BotCore.Tg — модуль для интеграции с Telegram в рамках BotCore.</Description>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
@@ -18,14 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\AIHackathon\BotCore\LICENSE">
+    <None Include="..\..\BotCore\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Telegram.Bot" Version="22.1.3" />
+    <PackageReference Include="Telegram.Bot" Version="22.4.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -234,7 +234,7 @@ namespace BotCore.Tg
             //if (update.PreCheckoutQuery != null && update.PreCheckoutQuery.From != null) return update.PreCheckoutQuery.From.;
             return null; // ChatId не найден
         }
-        internal static IReplyMarkup? GetReplyMarkup(SendModel sendingClient)
-            => (IReplyMarkup?)sendingClient.Inline.CreateTgInline() ?? sendingClient.Keyboard.CreateTgReply();
+        internal static ReplyMarkup? GetReplyMarkup(SendModel sendingClient)
+            => (ReplyMarkup?)sendingClient.Inline.CreateTgInline() ?? sendingClient.Keyboard.CreateTgReply();
     }
 }

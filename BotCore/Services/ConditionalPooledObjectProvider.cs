@@ -4,7 +4,6 @@ using BotCore.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks.Sources;
 
 namespace BotCore.Services
 {

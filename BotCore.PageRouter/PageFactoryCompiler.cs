@@ -1,19 +1,18 @@
 ﻿using BotCore.Interfaces;
 using BotCore.PageRouter.Attributes;
 using BotCore.PageRouter.Interfaces;
+using BotCore.PageRouter.Models;
+using BotCore.Utils;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using System.Reflection;
-using BotCore.PageRouter.Models;
-using BotCore.Utils;
-using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Generic;
 
 
-#if DEBUG
-using AgileObjects.ReadableExpressions;
-#endif
+//#if DEBUG
+//using AgileObjects.ReadableExpressions;
+//#endif
 
 namespace BotCore.PageRouter
 {
@@ -175,9 +174,9 @@ namespace BotCore.PageRouter
             var block = Expression.Block(parameters.Variables, expressions);
             var lambda = Expression.Lambda<CreatePage<TUser, TContext>>(block, parameters.Services, parameters.User);
 
-#if DEBUG
-            serviceProvider.GetRequiredService<ILogger<PageFactoryCompiler>>()?.LogDebug("Результат компиляции страницы {page}: {compileResult}", type.FullName, lambda.ToReadableString());
-#endif
+            //#if DEBUG
+            //            serviceProvider.GetRequiredService<ILogger<PageFactoryCompiler>>()?.LogDebug("Результат компиляции страницы {page}: {compileResult}", type.FullName, lambda.ToReadableString());
+            //#endif
 
             return lambda.Compile();
         }

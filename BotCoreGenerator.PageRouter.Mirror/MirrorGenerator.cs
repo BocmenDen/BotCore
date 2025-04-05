@@ -32,25 +32,15 @@ namespace BotCoreGenerator.PageRouter.Mirror
         {
             if (pageInfoN == null) return;
             var pageInfo = pageInfoN.Value;
-            HelpBuilderCode modelCode = new HelpBuilderCode();
-            var modelName = Utils.GenerateNameModel(pageInfo);
-            modelCode.AppendLine($"namespace {Consts.Namespace}");
-            modelCode.OpenScope();
-            {
-                modelCode.AppendLine($"public class {modelName}");
-                modelCode.OpenScope();
-                {
-                    foreach (var field in pageInfo.Fields)
-                    {
-                        modelCode.AppendLine($"public {field.Type} {field.Name} {{ get; set; }} = null!;");
-                    }
-                }
-                modelCode.CloseScope();
-            }
-            modelCode.CloseScope();
+            GenerateModel(pageInfo, out HelpBuilderCode modelCode, out string modelName);
             context.AddSource($"{modelName}.g.cs", modelCode);
             var modelFullName = $"{Consts.Namespace}.{modelName}";
+            HelpBuilderCode pageCode = BindModelToPage(pageInfo, modelFullName);
+            context.AddSource($"{pageInfo.NamePage}.g.cs", pageCode);
+        }
 
+        private static HelpBuilderCode BindModelToPage(PageInfo pageInfo, string modelFullName)
+        {
             HelpBuilderCode pageCode = new HelpBuilderCode();
             pageCode.AppendLine($"namespace {pageInfo.NameSpacePage}");
             pageCode.OpenScope();
@@ -81,7 +71,27 @@ namespace BotCoreGenerator.PageRouter.Mirror
                 pageCode.CloseScope();
             }
             pageCode.CloseScope();
-            context.AddSource($"{pageInfo.NamePage}.g.cs", pageCode);
+            return pageCode;
+        }
+
+        private static void GenerateModel(PageInfo pageInfo, out HelpBuilderCode modelCode, out string modelName)
+        {
+            modelCode =new HelpBuilderCode();
+            modelName =Utils.GenerateNameModel(pageInfo);
+            modelCode.AppendLine($"namespace {Consts.Namespace}");
+            modelCode.OpenScope();
+            {
+                modelCode.AppendLine($"public class {modelName}");
+                modelCode.OpenScope();
+                {
+                    foreach (var field in pageInfo.Fields)
+                    {
+                        modelCode.AppendLine($"public {field.Type} {field.Name} {{ get; set; }} = null!;");
+                    }
+                }
+                modelCode.CloseScope();
+            }
+            modelCode.CloseScope();
         }
     }
 }

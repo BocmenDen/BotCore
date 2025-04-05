@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>BotCore.EfDb</PackageId>
     <Title>BotCore.EfDb</Title>
-    <Version>1.0.0-alpha-1</Version>
+    <Version>1.0.1-alpha-1</Version>
     <Authors>BocmenDen</Authors>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
     <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
@@ -18,14 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\AIHackathon\BotCore\LICENSE">
+    <None Include="..\..\BotCore\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,7 +14,7 @@ namespace BotCore.Utils
                 return false;
             var map = @class.GetInterfaceMap(@interface);
             int index = Array.FindIndex(map.InterfaceMethods, m => m.Name == methodName);
-            if(index < 0) return false;
+            if (index < 0) return false;
             method = map.TargetMethods[index];
             return true;
         }

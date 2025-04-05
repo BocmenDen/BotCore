@@ -2,6 +2,8 @@
 {
     public record ButtonsSend : CollectionBotParameters
     {
+        public readonly static ButtonsSend Empty = new([]);
+
         public IReadOnlyList<IReadOnlyList<ButtonSend>> Buttons { get; }
 
         public ButtonsSend(IEnumerable<IEnumerable<ButtonSend>> buttons)
