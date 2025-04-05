@@ -1,4 +1,4 @@
-﻿using BotCore.EfUserDb;
+﻿using BotCore.EfDb;
 using BotCore.Interfaces;
 using BotCore.OneBot;
 using Microsoft.EntityFrameworkCore;

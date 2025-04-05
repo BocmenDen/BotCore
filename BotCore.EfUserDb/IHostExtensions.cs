@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
 
-namespace BotCore.EfUserDb
+namespace BotCore.EfDb
 {
     public static class IHostExtensions
     {
@@ -38,6 +38,8 @@ namespace BotCore.EfUserDb
             method.Invoke(null, [services, dbBuilderApplayConfig, ServiceLifetime.Singleton]);
 
             services.AddSingleton(typeof(IFactory<>).MakeGenericType(implementationType), typeof(DBFactory<>).MakeGenericType(implementationType));
+
+            services.AddSingleton(typeof(IReset<>).MakeGenericType(implementationType), typeof(DBReset<>).MakeGenericType(implementationType));
         }
     }
 }

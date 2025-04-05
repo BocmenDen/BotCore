@@ -1,4 +1,4 @@
-﻿using BotCore.EfUserDb;
+﻿using BotCore.EfDb;
 using BotCore.FilterRouter;
 using BotCore.FilterRouter.Extensions;
 using BotCore.Interfaces;

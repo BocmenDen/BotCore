@@ -1,6 +1,6 @@
 ﻿using BotCore.Attributes;
 
-namespace BotCore.EfUserDb
+namespace BotCore.EfDb
 {
     public class DBAttribute() : ServiceAttribute(DBRegistrationProvaderName)
     {
