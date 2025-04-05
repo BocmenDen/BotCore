@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace BotCore.Demo.Pages
 {
     [PageCacheable<string>("DemoPage1")]
-    public class DemoPage1<TUser, TContext>(ILogger<DemoPage1<TUser, TContext>> logger) : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>, IBindNavigateFunction<TUser, TContext, string>
+    public class DemoPage1<TUser, TContext>(ILogger<DemoPage1<TUser, TContext>> logger) : IPage<TUser, TContext>, IPageLoading<TUser>, IPageLoaded<TUser>, IBindNavigateFunction<TUser, TContext, string>, IPageOnExit<TUser, TContext>
         where TUser : IUser
         where TContext : IUpdateContext<TUser>
     {
@@ -17,6 +17,11 @@ namespace BotCore.Demo.Pages
         }
 
         public Task HandleNewUpdateContext(TContext context) => context.Reply(context.Update.Message!);
+
+        public Task OnExit(TContext context)
+        {
+            return context.Reply("Вы покинули страницу повторюшки");
+        }
 
         public async Task OnNavigate(TContext context)
         {

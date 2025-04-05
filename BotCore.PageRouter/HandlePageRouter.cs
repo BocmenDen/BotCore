@@ -45,6 +45,15 @@ namespace BotCore.PageRouter
 
         public async Task Navigate(TContext context, TKey keyPage)
         {
+            var oldKeyPage = _dbKeys.TakeObject((db) => db.GetKeyPage(context.User));
+            if (oldKeyPage != null)
+            {
+                if (EqualityComparer<TKey>.Default.Equals(oldKeyPage, keyPage)) return;
+                if (_pageCollection.GetPage(_serviceProvider, context.User, oldKeyPage) is IPageOnExit<TUser, TContext> pageExit)
+                {
+                    await pageExit.OnExit(context);
+                }
+            }
             _logger.LogInformation("Пользователь {user}, перешёл на страницу {keyPage}", context.User, keyPage);
             await _dbKeys.TakeObject((db) => db.SetKeyPage(context.User, keyPage));
             var page = _pageCollection.GetPage(_serviceProvider, context.User, keyPage);
