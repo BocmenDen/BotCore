@@ -7,8 +7,4 @@ namespace BotCore.Interfaces
         where TContext : IUpdateContext<TUser>
     {
     }
-
-    public interface IClientBot : IClientBot<IUser, IUpdateContext<IUser>>
-    {
-    }
 }

@@ -54,7 +54,7 @@ namespace BotCore.Demo
             var filterRouting = host.Services.GetRequiredService<HandleFilterRouter<User, UpdateContextOneBot<User>>>();
             var pageRouting = host.Services.GetRequiredService<HandlePageRouter<User, UpdateContextOneBot<User>, string>>();
 
-            foreach (var client in host.Services.GetServices<IClientBot>())
+            foreach (var client in host.Services.GetServices<IClientBot<IUser, IUpdateContext<IUser>>>())
                 client.Update += combineUser.HandleNewUpdateContext;
 
             combineUser.Update += spamFilter.HandleNewUpdateContext;
