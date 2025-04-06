@@ -4,6 +4,8 @@ namespace BotCore.Models
 {
     public record SendModel : CollectionBotParameters
     {
+        public bool IsEmpty => Message == null && Inline == null && Keyboard == null && Medias == null;
+
         private IReadOnlyList<MediaSource>? _medias;
 
         public string? Message;

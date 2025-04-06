@@ -1,19 +1,18 @@
-﻿using BotCore.Base;
-using BotCore.Interfaces;
+﻿using BotCore.Interfaces;
 
 namespace BotCore.Models
 {
-    public record UpdateContext<TUser>(ClientBot<TUser, UpdateContext<TUser>> Bot, TUser User, UpdateModel Update) : IUpdateContext<TUser>
+    public record UpdateContext<TUser>(IClientBot<TUser, UpdateContext<TUser>> bot, TUser user, UpdateModel update, Func<SendModel, Task> reply) : IUpdateContext<TUser>
         where TUser : IUser
     {
-        public readonly ClientBot<TUser, UpdateContext<TUser>> Bot = Bot??throw new ArgumentNullException(nameof(Bot));
+        public readonly IClientBot<TUser, UpdateContext<TUser>> Bot = bot??throw new ArgumentNullException(nameof(bot));
 
         public IClientBotFunctions BotFunctions => Bot;
 
-        public TUser User { get; private set; } = User;
+        public TUser User { get; private set; } = user;
 
-        public UpdateModel Update { get; private set; } = Update??throw new ArgumentNullException(nameof(Update));
+        public UpdateModel Update { get; private set; } = update??throw new ArgumentNullException(nameof(update));
 
-        public Task Reply(SendModel send) => Bot.Send(User, send, Update);
+        public Task Reply(SendModel send) => reply(send);
     }
 }
