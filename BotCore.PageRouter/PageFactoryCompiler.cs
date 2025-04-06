@@ -21,7 +21,7 @@ namespace BotCore.PageRouter
         public const string DefaultCompiler = "default";
         public delegate IPage<TUser, TContext> CreatePage<TUser, TContext>(IServiceProvider serviceProvider, TUser user) where TUser : IUser where TContext : IUpdateContext<TUser>;
 
-        private readonly static List<Func<ParametersItemDefaultCompiler, IEnumerable<Expression>>> _itemsDefaultCompiler = [];
+        private readonly static List<(string nodeName, Func<ParametersItemDefaultCompiler, IEnumerable<Expression>> nodeApplay)> _itemsDefaultCompiler = [];
         private readonly static Dictionary<string, MethodInfo> _compilers = [];
         private readonly static MethodInfo _stopingCompile;
         private readonly static MethodInfo _startingCompile;
@@ -40,7 +40,7 @@ namespace BotCore.PageRouter
                 {
                     var parameters = method.GetParameters();
                     if (parameters.Length != 1 || parameters[0].ParameterType != typeof(ParametersItemDefaultCompiler)) continue;
-                    _itemsDefaultCompiler.Add(method.CreateDelegate<Func<ParametersItemDefaultCompiler, IEnumerable<Expression>>>());
+                    _itemsDefaultCompiler.Add((method.Name, method.CreateDelegate<Func<ParametersItemDefaultCompiler, IEnumerable<Expression>>>()));
                     continue;
                 }
 
@@ -48,8 +48,8 @@ namespace BotCore.PageRouter
                 if (attCompiler != null)
                     _compilers.Add(attCompiler.Name, method);
             }
-            _stopingCompile = typeof(PageFactoryCompiler).GetMethod(nameof(StoppingCompileEvent), BindingFlags.Static | BindingFlags.NonPublic)!;
-            _startingCompile = typeof(PageFactoryCompiler).GetMethod(nameof(StartingCompileEvent), BindingFlags.Static | BindingFlags.NonPublic)!;
+            _stopingCompile = typeof(PageFactoryCompiler).GetMethod(nameof(DefaultNodeCompilers.StoppingCompileEvent), BindingFlags.Static | BindingFlags.NonPublic)!;
+            _startingCompile = typeof(PageFactoryCompiler).GetMethod(nameof(DefaultNodeCompilers.StartingCompileEvent), BindingFlags.Static | BindingFlags.NonPublic)!;
         }
 
         public static CreatePage<TUser, TContext> Build<TUser, TContext, TKey>(Type type, TKey key, IServiceProvider serviceProvider, string? name = null)
@@ -160,14 +160,23 @@ namespace BotCore.PageRouter
             var returnLabel = Expression.Label(typeof(IPage<TUser, TContext>), "retVal");
             expressions.AddRange(instancePage(parameters, returnLabel));
 
-            expressions.AddRange(StartingCompileEvent(parameters));
-            foreach (var itemCompiler in _itemsDefaultCompiler)
-                expressions.AddRange(itemCompiler(parameters));
+            expressions.AddRange(DefaultNodeCompilers.StartingCompileEvent(parameters));
+            foreach (var (nodeCompilerName, nodeCompiler) in _itemsDefaultCompiler)
+            {
+                try
+                {
+                    expressions.AddRange(nodeCompiler(parameters));
+                }
+                catch (Exception e)
+                {
+                    serviceProvider.GetRequiredService<ILogger<PageFactoryCompiler>>()?.LogError(e, "Ошибка добавления инструкций создания страниц у компилятора {nameNodeCompiler}", nodeCompilerName);
+                }
+            }
 
             if (additionalActions != null)
                 expressions.AddRange(additionalActions(parameters, returnLabel));
 
-            expressions.AddRange(StoppingCompileEvent(parameters));
+            expressions.AddRange(DefaultNodeCompilers.StoppingCompileEvent(parameters));
 
             expressions.Add(Expression.Label(returnLabel, parameters.Page));
 
@@ -198,78 +207,6 @@ namespace BotCore.PageRouter
                 result.Add(typeof(TContext));
             }
             return [.. result];
-        }
-
-        private static IEnumerable<Expression> StoppingCompileEvent(ParametersItemDefaultCompiler parameters)
-        {
-            if (!parameters.TypePage.TryGetInterfaceMethod(typeof(IPageLoaded<>).MakeGenericType(parameters.TypeUser), nameof(IPageLoaded<IUser>.PageLoaded), out MethodInfo? method))
-                yield break;
-            yield return Expression.Call(parameters.Page, method!, parameters.User);
-        }
-        private static IEnumerable<Expression> StartingCompileEvent(ParametersItemDefaultCompiler parameters)
-        {
-            if (!parameters.TypePage.TryGetInterfaceMethod(typeof(IPageLoading<>).MakeGenericType(parameters.TypeUser), nameof(IPageLoading<IUser>.PageLoading), out MethodInfo? method))
-                yield break;
-            yield return Expression.Call(parameters.Page, method!, parameters.User);
-        }
-        [PageFactoryCompilerFunc]
-        private static IEnumerable<Expression> BindNavigateParameter(ParametersItemDefaultCompiler parameters)
-        {
-            if (!parameters.TypePage.TryGetInterfaceMethod(typeof(IBindNavigateParameter), nameof(IBindNavigateParameter.BindNavigateParameter), out MethodInfo? method))
-                yield break;
-            var typeService = typeof(IDBUserPageParameter<>).MakeGenericType(parameters.TypeUser);
-            var parameter = Expression.Call(Expression.Constant(parameters.ServiceProvider.GetRequiredService(typeService), typeService), typeService.GetMethod(nameof(IDBUserPageParameter<IUser>.GetParameter))!, parameters.User);
-            yield return Expression.Call(parameters.Page, method!, parameter);
-            yield break;
-        }
-        [PageFactoryCompilerFunc]
-        private static IEnumerable<Expression> BindModel(ParametersItemDefaultCompiler parameters)
-        {
-            var typeServiceNative = typeof(IDBUserPageModel<>).MakeGenericType(parameters.TypeUser);
-            var typeServiceDefault = typeof(IDBUserPageModel<IUser>);
-            var serviceObj = parameters.ServiceProvider.GetService(typeServiceNative) ??
-                parameters.ServiceProvider.GetService(typeServiceDefault);
-            Expression service = Expression.Constant(serviceObj, typeServiceNative);
-            foreach (var @interface in parameters.TypePage.GetInterfaces())
-            {
-                if (!@interface.IsGenericType ||
-                    @interface.GetGenericTypeDefinition() != typeof(IBindStorageModel<>) ||
-                    !parameters.TypePage.TryGetInterfaceMethod(@interface, nameof(IBindStorageModel<object>.BindStorageModel), out MethodInfo? methodBind)) continue;
-
-                if (serviceObj == null)
-                    throw new Exception($"Не найден сервис-хранилище моделей страниц, {typeServiceNative} или {typeServiceDefault}");
-
-                var typeArgument = @interface.GetGenericArguments()[0];
-                var method = typeServiceNative.GetMethod(nameof(IDBUserPageModel<IUser>.GetModel))!.MakeGenericMethod(typeArgument);
-                var model = Expression.Call(service, method, parameters.User);
-                yield return Expression.Call(parameters.Page, methodBind!, model);
-            }
-        }
-        [PageFactoryCompilerFunc]
-        private static IEnumerable<Expression> BindNavigateFunction(ParametersItemDefaultCompiler parameters)
-        {
-            foreach (var @interface in parameters.TypePage.GetInterfaces())
-            {
-                if (!@interface.IsGenericType || @interface.GetGenericTypeDefinition() != typeof(IBindNavigateFunction<,,>)) continue;
-                var typeInterfaceUser = @interface.GetGenericArguments()[0];
-                var typeInterfaceContext = @interface.GetGenericArguments()[1];
-                var typeInterfaceKey = @interface.GetGenericArguments()[2];
-                if (!parameters.TypeUser.IsAssignableTo(typeInterfaceUser) || !parameters.TypeContext.IsAssignableTo(typeInterfaceContext) || !parameters.TypeKey.IsAssignableTo(typeInterfaceKey) ||
-                    !parameters.TypePage.TryGetInterfaceMethod(@interface, nameof(IBindNavigateFunction<IUser, IUpdateContext<IUser>, object>.BindNavigateFunction), out MethodInfo? methodBind)) continue;
-
-                var typeService = typeof(HandlePageRouter<,,>).MakeGenericType(parameters.TypeUser, parameters.TypeContext, parameters.TypeKey);
-                var service = parameters.GetServiceDynamic(typeService);
-                var methodService = typeService.GetMethod(nameof(HandlePageRouter<IUser, IUpdateContext<IUser>, object>.Navigate))!;
-
-                var paramContext = Expression.Parameter(parameters.TypeContext, "context");
-                var paramKey = Expression.Parameter(parameters.TypeKey, "key");
-                var callNavigate = Expression.Call(service, methodService, paramContext, paramKey);
-                var navigateFuncType = typeof(Func<,,>).MakeGenericType(parameters.TypeContext, parameters.TypeKey, methodService.ReturnType);
-                var navigateDelegate = Expression.Lambda(navigateFuncType, callNavigate, paramContext, paramKey);
-                yield return Expression.Call(parameters.Page, methodBind!, navigateDelegate);
-                yield break;
-            }
-            yield break;
         }
 
         private readonly struct KeyPage<Key>(Key keyPage, long userId) : IEquatable<KeyPage<Key>> where Key : notnull
