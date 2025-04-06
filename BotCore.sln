@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35514.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore", "BotCore\BotCore.csproj", "{89922E0F-C656-4B86-8263-C96785C74E79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.Tg", "BotCore.Telegram\BotCore.Tg.csproj", "{AEAEB524-B91A-46AE-AA66-7135508D1A80}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.Tg", "BotCore.Tg\BotCore.Tg.csproj", "{AEAEB524-B91A-46AE-AA66-7135508D1A80}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCore.Demo", "BotCore.Demo\BotCore.Demo.csproj", "{2520427E-189A-4814-8031-F72E35A80B5D}"
 EndProject
