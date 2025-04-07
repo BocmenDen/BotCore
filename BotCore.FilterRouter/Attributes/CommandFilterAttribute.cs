@@ -17,16 +17,13 @@ namespace BotCore.FilterRouter.Attributes
 
         public override Expression GetExpression(WriterExpression<TUser> writerExpression)
         {
-            MemberExpression originalCommand = writerExpression.GetUpdateCommand<TUser>();
+            MemberExpression originalCommand = writerExpression.GetUpdateCommand();
             Expression commandExpression = originalCommand;
             var commandsConstant = Expression.Constant(_commands.AsEnumerable());
             if (_isIgnoreCase)
             {
-                ParameterExpression commandToLower = Expression.Parameter(typeof(string));
-                MethodCallExpression callToLower = Expression.Call(commandExpression, typeof(string).GetMethod(nameof(string.ToLower)) ??
-                    throw new Exception("Method [string.ToLower] not found"));
-                BinaryExpression assignResultSearch = Expression.Assign(commandToLower, callToLower);
-                writerExpression.WriteBody(assignResultSearch);
+                commandExpression = Expression.Call(commandExpression, typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes) ??
+                    throw new Exception($"Метод [{nameof(String)}.{nameof(string.ToLower)}] не найден"));
             }
 
             MethodInfo containsMethodDefinition = typeof(Enumerable)
@@ -40,7 +37,7 @@ namespace BotCore.FilterRouter.Attributes
                 commandsConstant,
                 commandExpression
             );
-            return Expression.Not(containsMethod);
+            return Expression.Condition(Expression.Equal(originalCommand, Expression.Constant(null, typeof(string))), Expression.Constant(true, typeof(bool)), Expression.Not(containsMethod));
         }
     }
 }

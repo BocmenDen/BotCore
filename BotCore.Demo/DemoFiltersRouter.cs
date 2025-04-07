@@ -17,7 +17,7 @@ namespace BotCore.Demo
         [ResourceKey("keyboard")]
         readonly static ButtonsSend keyboard = new([["Мой GitHub", "Ссылка на этот проект"], ["DemoPage 1", "DemoPage 2"]]);
 
-        [CommandFilter<User>("start")]
+        [CommandFilter<User>(true, "start")]
         [MessageTypeFilter<User>(UpdateType.Command)]
         static async Task StartMessageHandler(IUpdateContext<User> context)
         {
