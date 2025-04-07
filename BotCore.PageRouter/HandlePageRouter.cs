@@ -49,11 +49,8 @@ namespace BotCore.PageRouter
             await _dbKeys.TakeObject((db) => db.SetKeyPage(context.User, keyPage));
             if (oldKeyPage != null)
             {
-                if (EqualityComparer<TKey>.Default.Equals(oldKeyPage, keyPage)) return;
                 if (_pageCollection.GetPage(_serviceProvider, context.User, oldKeyPage) is IPageOnExit<TUser, TContext> pageExit)
-                {
                     await pageExit.OnExit(context);
-                }
             }
             _logger.LogInformation("Пользователь {user}, перешёл на страницу {keyPage}", context.User, keyPage);
             var page = _pageCollection.GetPage(_serviceProvider, context.User, keyPage);
