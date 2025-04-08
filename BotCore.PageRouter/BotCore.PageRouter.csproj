@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <Version>1.0.5-alpha-1</Version>
+    <Version>1.0.6-alpha-1</Version>
     <Authors>BocmenDen</Authors>
     <Description>BotCore.PageRouter — модуль для маршрутизации страниц в BotCore</Description>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
@@ -15,6 +15,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>

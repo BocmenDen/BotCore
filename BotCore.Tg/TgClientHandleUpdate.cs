@@ -46,31 +46,43 @@ namespace BotCore.Tg
         internal List<MediaSource>? ParseMedia(Update update)
         {
             List<MediaSource> mediaSources = [];
-            void addMedia(List<MediaSource> medias, FileBase? fileBase, string? fileName, string? mimeType)
+            void addMedia(List<MediaSource> medias, string fileId, string? fileName, string? mimeType)
             {
-                if (fileBase == null) return;
+                if (fileId == null) return;
                 medias.Add(new MediaSource(async () =>
                 {
                     string path = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + fileName);
                     var streamWriter = File.Open(path, FileMode.OpenOrCreate);
-                    var file = await BotClient.GetFile(fileBase.FileId!);
+                    var file = await BotClient.GetFile(fileId);
                     await BotClient.DownloadFile(file.FilePath!, streamWriter);
                     streamWriter.Position = 0;
                     return streamWriter;
-                }, new() { { TgClient.KeyMediaSourceFileId, fileBase.FileId } })
+                }, new() { { TgClient.KeyMediaSourceFileId, fileId } })
                 {
                     Name = fileName,
                     Type = Path.GetExtension(fileName),
                     MimeType = mimeType,
-                    Id = fileBase.FileId
+                    Id = fileId
                 });
             }
             if (update.Message?.Document != null)
-                addMedia(mediaSources, update.Message.Document, update.Message.Document.FileName, update.Message.Document.MimeType);
+                addMedia(mediaSources, update.Message.Document.FileId, update.Message.Document.FileName, update.Message.Document.MimeType);
             else if (update.Message?.Animation != null)
-                addMedia(mediaSources, update.Message.Animation, update.Message.Animation.FileName, update.Message.Animation.MimeType);
+                addMedia(mediaSources, update.Message.Animation.FileId, update.Message.Animation.FileName, update.Message.Animation.MimeType);
             else if (update.Message?.Video != null)
-                addMedia(mediaSources, update.Message.Video, update.Message.Video.FileName, update.Message.Video.MimeType);
+                addMedia(mediaSources, update.Message.Video.FileId, update.Message.Video.FileName, update.Message.Video.MimeType);
+            else if (update.Message?.Photo != null)
+                addMedia(mediaSources, update.Message.Photo.Last().FileId, $"{update.Message.Photo.Last().FileId}.jpg", "image/jpeg");
+            else if (update.Message?.Audio != null)
+                addMedia(mediaSources, update.Message.Audio.FileId, update.Message.Audio.FileName, update.Message.Audio.MimeType);
+            else if (update.Message?.Voice != null)
+                addMedia(mediaSources, update.Message.Voice.FileId, $"{update.Message.Voice}.mp3", update.Message.Voice.MimeType);
+            else if (update.Message?.VideoNote != null)
+                addMedia(mediaSources, update.Message.VideoNote.FileId, $"{update.Message.VideoNote}.mp4", "video/mp4");
+            else if (update.Message?.MediaGroupId != null)
+            {
+                // TODO сложная ломающая всё логика ТГ отправляет данные группы в виде разных сообщений
+            }
             if (mediaSources.Count!=0)
                 return mediaSources;
             return null;

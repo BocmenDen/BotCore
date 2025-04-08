@@ -16,8 +16,10 @@
 		<Copyright>Copyright (c) 2025 BocmenDen</Copyright>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Description>BotCore — это базовый модуль библиотеки для создания чат-ботов на C# с единым API, предоставляющий примитивы, систему конфигурации и механизм запуска.</Description>
-		<Version>1.0.5-alpha-1</Version>
+		<Version>1.0.6-alpha-1</Version>
 		<PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -86,7 +86,7 @@ namespace BotCore.Tg
         internal static string GetFirstFileId(this Message message) =>
             message.Animation?.FileId ??
             message.Video?.FileId ??
-            message.Photo?.FirstOrDefault()?.FileId ??
+            message.Photo?.LastOrDefault()?.FileId ??
             message.Document?.FileId ??
             message.Audio?.FileId ??
             message.VideoNote?.FileId ??

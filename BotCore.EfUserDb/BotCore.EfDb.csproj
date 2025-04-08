@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>BotCore.EfDb</PackageId>
     <Title>BotCore.EfDb</Title>
-    <Version>1.0.5-alpha-1</Version>
+    <Version>1.0.6-alpha-1</Version>
     <Authors>BocmenDen</Authors>
     <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
     <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
@@ -15,6 +15,8 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>BotCore.EfDb— модуль для удобной интеграции базы данных в BotCore с использованием Entity Framework</Description>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
