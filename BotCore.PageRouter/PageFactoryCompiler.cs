@@ -115,9 +115,9 @@ namespace BotCore.PageRouter
                     }
                     return false;
                 }).MakeGenericMethod(parameters.TypePage);
-                Expression cacheOptions = attr == null ? Expression.Call(parameters.Page, type.GetInterfaceMethod(typeof(IGetCacheOptions), nameof(IGetCacheOptions.GetCacheOptions))) : Expression.Constant(new MemoryCacheEntryOptions()
+                Expression cacheOptions = type.IsAssignableTo(typeof(IGetCacheOptions)) ? Expression.Call(parameters.Page, type.GetInterfaceMethod(typeof(IGetCacheOptions), nameof(IGetCacheOptions.GetCacheOptions))) : Expression.Constant(new MemoryCacheEntryOptions()
                 {
-                    SlidingExpiration = attr.SlidingExpiration
+                    SlidingExpiration = attr!.SlidingExpiration
                 }, typeof(MemoryCacheEntryOptions));
                 yield return Expression.Call(method, service, keyPage, parameters.Page, cacheOptions);
             }

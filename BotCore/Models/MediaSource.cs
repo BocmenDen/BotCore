@@ -26,7 +26,7 @@
                 return await response.Content.ReadAsStreamAsync();
             })
             {
-                Type = Path.GetExtension(uri),
+                Type = Path.GetExtension(uri).Replace(".", string.Empty).Trim(),
                 Name = Path.GetFileName(uri),
                 Uri = uri
             };

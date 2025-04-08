@@ -86,7 +86,7 @@ namespace BotCoreGenerator.PageRouter.Mirror
                 {
                     foreach (var field in pageInfo.Fields)
                     {
-                        modelCode.AppendLine($"public {field.Type} {field.Name} {{ get; set; }} = null!;");
+                        modelCode.AppendLine($"public {field.Type} {field.Name} {{ get; set; }} = default!;");
                     }
                 }
                 modelCode.CloseScope();

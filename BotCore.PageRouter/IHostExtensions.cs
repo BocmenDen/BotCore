@@ -54,7 +54,7 @@ namespace BotCore.PageRouter
 
                 foreach (var (keyPage, compilerName, typePage) in pages)
                 {
-                    services.AddSingleton(typePage);
+                    services.AddTransient(typePage);
                     factoryCast.AddPage(keyPage, compilerName, typePage);
                 }
             });
