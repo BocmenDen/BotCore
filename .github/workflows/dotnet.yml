@@ -1,4 +1,4 @@
-name: Publish NuGet (on version change)
+name: Публикация NuGet (при изменении версии)
 
 on:
   push:
@@ -14,15 +14,15 @@ jobs:
       with:
         fetch-depth: 2
 
-    - name: Setup .NET
+    - name: Настройка .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.x'
   
-    - name: Install xmllint
+    - name: Установка xmllint
       run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-    - name: Check if <Version> changed
+    - name: Проверка изменения версии
       id: check_version
       run: |
         git show HEAD^:Directory.Build.props > old.props || echo "<Version>none</Version>" > old.props
@@ -36,18 +36,20 @@ jobs:
           echo "version_changed=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Restore dependencies
+    - name: Восстановление зависимостей
       run: dotnet restore
 
-    - name: Build
+    - name: Сборка
       run: dotnet build -c Release --no-restore
 
-    - name: Pack
+    - name: Формирование пакетов
       if: steps.check_version.outputs.version_changed == 'true'
       run: dotnet pack -c Release --no-build -o ./nupkgs
 
-    - name: Push NuGet package
+    - name: Публикация NuGet пакетов
       if: steps.check_version.outputs.version_changed == 'true'
-      run: |
-        dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-        dotnet nuget push "./nupkgs/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      
+    - name: Публикация NuGet символов пакетов
+      if: steps.check_version.outputs.version_changed == 'true'
+      run: dotnet nuget push "./nupkgs/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
