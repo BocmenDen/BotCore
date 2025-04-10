@@ -49,7 +49,3 @@ jobs:
     - name: Публикация NuGet пакетов
       if: steps.check_version.outputs.version_changed == 'true'
       run: dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-      
-    - name: Публикация NuGet символов пакетов
-      if: steps.check_version.outputs.version_changed == 'true'
-      run: dotnet nuget push "./nupkgs/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
