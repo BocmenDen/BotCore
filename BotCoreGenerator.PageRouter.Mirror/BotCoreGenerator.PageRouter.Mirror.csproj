@@ -2,29 +2,18 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<PackageType>Library</PackageType>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<Title>$(AssemblyName)</Title>
-		<Version>1.0.6-alpha-1</Version>
-		<Authors>BocmenDen</Authors>
-		<Copyright>Copyright (c) 2025 BocmenDen</Copyright>
-		<PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
+		<PackageId>$(AssemblyName)</PackageId>
 		<PackageTags>chatbot;bot;csharp;BotCore;source-generator</PackageTags>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Description>BotCoreGenerator.PageRouter.Mirror — генератор кода для BotCore, автоматически создающий модели данных страниц на основе partial-свойств и связывающий их со страницами через отражение.</Description>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="..\LICENSE">
-		  <Pack>True</Pack>
-		  <PackagePath>\</PackagePath>
-		</None>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -32,7 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="bin\Debug\netstandard2.0\\BotCoreGenerator.PageRouter.Mirror.dll" />
+	  <None Remove="bin\Release\netstandard2.0\\BotCoreGenerator.PageRouter.Mirror.dll" />
 	</ItemGroup>
 
 	<ItemGroup>

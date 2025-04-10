@@ -1,33 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>$(AssemblyName)</Title>
-    <Version>1.0.6-alpha-1</Version>
-    <Authors>BocmenDen</Authors>
-    <Description>BotCore.SpamBroker — модуль для обработки спама в BotCore</Description>
-    <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
-    <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>$(AssemblyName)</Title>
+		<PackageId>$(AssemblyName)</PackageId>
+		<Description>BotCore.SpamBroker — модуль для обработки спама в BotCore</Description>
+		<PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\..\BotCore\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\BotCore\BotCore.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BotCore\BotCore.csproj" />
+	</ItemGroup>
 
 </Project>

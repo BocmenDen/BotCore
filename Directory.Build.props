@@ -1,0 +1,22 @@
+<Project>
+  
+  <PropertyGroup>
+	<Authors>BocmenDen</Authors>
+	<PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<Copyright>Copyright (c) 2025 BocmenDen</Copyright>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<Version>1.0.6-alpha-1</Version>
+	<IncludeSymbols>True</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  
+<ItemGroup>
+  <None Include="..\..\BotCore\LICENSE">
+	<Pack>True</Pack>
+	<PackagePath>\</PackagePath>
+  </None>
+</ItemGroup>
+
+</Project>

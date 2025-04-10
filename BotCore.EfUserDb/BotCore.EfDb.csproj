@@ -1,37 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PackageId>BotCore.EfDb</PackageId>
-    <Title>BotCore.EfDb</Title>
-    <Version>1.0.6-alpha-1</Version>
-    <Authors>BocmenDen</Authors>
-    <Copyright>Copyright (c) 2025 BocmenDen</Copyright>
-    <PackageProjectUrl>https://github.com/BocmenDen/BotCore</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/BocmenDen/BotCore</RepositoryUrl>
-    <PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>BotCore.EfDb— модуль для удобной интеграции базы данных в BotCore с использованием Entity Framework</Description>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>$(AssemblyName)</PackageId>
+		<Title>$(AssemblyName)</Title>
+		<PackageTags>chatbot;bot;csharp;BotCore</PackageTags>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Description>BotCore.EfDb— модуль для удобной интеграции базы данных в BotCore с использованием Entity Framework</Description>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\..\BotCore\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\BotCore\BotCore.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BotCore\BotCore.csproj" />
+	</ItemGroup>
 
 </Project>
