@@ -16,8 +16,7 @@ namespace BotCore.Tg
             if (Update is null) return;
             UpdateType flags = update.Type switch
             {
-                Telegram.Bot.Types.Enums.UpdateType.InlineQuery => UpdateType.Inline,
-                Telegram.Bot.Types.Enums.UpdateType.CallbackQuery => UpdateType.Keyboard,
+                Telegram.Bot.Types.Enums.UpdateType.CallbackQuery => UpdateType.Inline,
                 _ => UpdateType.None
             };
             var chatId = update.GetChatId(); if (chatId is null) return;
@@ -60,7 +59,7 @@ namespace BotCore.Tg
                 }, new() { { TgClient.KeyMediaSourceFileId, fileId } })
                 {
                     Name = fileName,
-                    Type = Path.GetExtension(fileName),
+                    Type = Path.GetExtension(fileName)?.Replace(".", string.Empty),
                     MimeType = mimeType,
                     Id = fileId
                 });

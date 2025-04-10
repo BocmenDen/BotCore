@@ -49,17 +49,35 @@ namespace BotCore.Tg
         public ButtonSearch? GetIndexButton(UpdateModel update, ButtonsSend buttonsSend)
         {
             if (update.OriginalMessage is not Update updateTg) return null;
-            for (int i = 0; i < buttonsSend.Buttons.Count; i++)
+
+            ButtonSearch? searchBtn(string keyButton, string keyCache, Func<string, string> getCache)
             {
-                for (int j = 0; j < buttonsSend.Buttons[i].Count; j++)
+                if (buttonsSend.TryGetParameter<Dictionary<string, ButtonSearch>>(keyCache, out var cacheSearch))
                 {
-                    if (buttonsSend.Buttons[i][j].Text == updateTg.Message?.Text || buttonsSend.Buttons[i][j].Text == updateTg.InlineQuery?.Query || buttonsSend.Buttons[i][j].Text.GetHashCode().ToString() == updateTg.CallbackQuery?.Data) // TODO оптимизировать за счёт кешировани buttonsSend.Buttons[i][j].Text.GetHashCode().ToString()
+                    if (cacheSearch!.TryGetValue(keyButton, out var btnSearch))
+                        return btnSearch;
+                    return null;
+                }
+                else
+                {
+                    for (int i = 0; i < buttonsSend.Buttons.Count; i++)
                     {
-                        return new ButtonSearch(i, j, buttonsSend.Buttons[i][j]);
+                        for (int j = 0; j < buttonsSend.Buttons[i].Count; j++)
+                        {
+                            var btn = buttonsSend.Buttons[i][j];
+                            var textBtn = TgClient.GetButtonText(btn);
+                            if (getCache(textBtn) == keyButton)
+                                return new ButtonSearch(i, j, btn);
+                        }
                     }
+                    return null;
                 }
             }
-            return null;
+
+            if (updateTg.Type == Telegram.Bot.Types.Enums.UpdateType.CallbackQuery)
+                return searchBtn(updateTg.CallbackQuery!.Data!, TgClient.KeyInlineKeyboardMarkupSearchCache, TgClient.GetHashButtonIline);
+            if (string.IsNullOrWhiteSpace(updateTg.Message?.Text)) return null;
+            return searchBtn(updateTg.Message.Text, TgClient.KeyInlineKeyboardMarkupSearchCache, (x) => x);
         }
     }
 }

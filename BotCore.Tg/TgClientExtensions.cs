@@ -44,40 +44,70 @@ namespace BotCore.Tg
             //if (update.ChosenInlineResult != null && update.ChosenInlineResult.From != null) return update.ChosenInlineResult.From; // Для chosen inline results это ID пользователя, не чата!
             //if (update.ShippingQuery != null && update.ShippingQuery.From != null) return update.ShippingQuery.From; // ID пользователя
             //if (update.PreCheckoutQuery != null && update.PreCheckoutQuery.From != null) return update.PreCheckoutQuery.From.;
-            return null; // ChatId не найден
+            return null;
         }
-        internal static InlineKeyboardMarkup? CreateInline(this ButtonsSend? buttonsSend)
+        internal static InlineKeyboardMarkup? CreateInline(this ButtonsSend? buttonsSend) =>
+            HelpGenerateButtons(buttonsSend, TgClient.KeyInlineKeyboardMarkupCache, TgClient.KeyInlineKeyboardMarkupSearchCache, (btn) =>
+            {
+                var textBtn = GetButtonText(btn);
+                var hash = btn.Text.GetHashCode().ToString();
+                return (hash, new InlineKeyboardButton(textBtn)
+                {
+                    CallbackData = hash,
+                    Url = btn.GetOrDefault<string>(nameof(InlineKeyboardButton.Url))
+                });
+            }, (buttons) =>
+            {
+                return new InlineKeyboardMarkup()
+                {
+                    InlineKeyboard = buttons
+                };
+            });
+        internal static ReplyKeyboardMarkup? CreateReply(this ButtonsSend? buttonsSend) =>
+            HelpGenerateButtons(buttonsSend, TgClient.KeyReplyKeyboardMarkupCache, TgClient.KeyReplyKeyboardMarkupSearchCache, (btn) =>
+            {
+                var textBtn = GetButtonText(btn);
+                return (textBtn, new KeyboardButton(textBtn));
+            }, (buttons) =>
+            {
+                return new ReplyKeyboardMarkup()
+                {
+                    ResizeKeyboard = true,
+                    Keyboard = buttons
+                };
+            });
+
+        private static TOut? HelpGenerateButtons<TOut, TItem>(this ButtonsSend? buttonsSend, string cacheResultKey, string cacheSearchKey, Func<ButtonSend, (string hash, TItem)> generateBtn, Func<List<List<TItem>>, TOut> createResult) where TOut : class
         {
             if (buttonsSend is null) return null;
-            return new InlineKeyboardMarkup()
+            if (buttonsSend.TryGetParameter(cacheResultKey, out TOut? result)) return result;
+            List<List<TItem>> buttonsGenerate = [];
+            int row = 0;
+            Dictionary<string, ButtonSearch> cacheSearchButtons = [];
+            foreach (var lineBtns in buttonsSend.Buttons)
             {
-                InlineKeyboard = buttonsSend.Buttons.Select(x => x.Select(b =>
+                List<TItem> lineGenerate = [];
+                int column = 0;
+                foreach (var btn in lineBtns)
                 {
-                    return new InlineKeyboardButton(b.Text)
-                    {
-                        CallbackData = b.Text.GetHashCode().ToString(),
-                        Url = b.GetOrDefault<string>(nameof(InlineKeyboardButton.Url))
-                    };
-                }))
-            };
+                    var (hash, btnGenerate) = generateBtn(btn);
+                    lineGenerate.Add(btnGenerate);
+                    cacheSearchButtons.Add(hash, new ButtonSearch(row, column, btn));
+                    column++;
+                }
+                buttonsGenerate.Add(lineGenerate);
+                row++;
+            }
+
+            result = createResult(buttonsGenerate);
+            buttonsSend[cacheSearchKey] = cacheSearchButtons;
+            buttonsSend[cacheResultKey] = result;
+            return result;
         }
-        internal static ReplyKeyboardMarkup? CreateReply(this ButtonsSend? buttonsSend)
-        {
-            if (buttonsSend is null) return null;
-            return new ReplyKeyboardMarkup()
-            {
-                Keyboard = buttonsSend.Buttons.Select(x => x.Select(b =>
-                {
-                    return new KeyboardButton(b.Text)
-                    {
-                        Text = b.Text,
-                        // TODO Parameters
-                    };
-                })),
-                ResizeKeyboard = true
-                // TODO Parameters
-            };
-        }
+
+        private static string GetButtonText(ButtonSend button)
+            => button.Text.Length <= TgClient.MaxLengthTextButton ? button.Text : button.Text[..TgClient.MaxLengthTextButton];
+
         internal static ReplyMarkup? GetReplyMarkup(this SendModel sendingClient) => (ReplyMarkup?)CreateInline(sendingClient.Inline) ?? CreateReply(sendingClient.Keyboard);
 
         internal static async ValueTask<FileTG> GetFile(this MediaSource media) => await FileTG.GetFileTg(media);
