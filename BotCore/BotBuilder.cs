@@ -93,7 +93,11 @@ namespace BotCore
         internal static void AddHosted(HostBuilderContext _, IServiceCollection services, Type[] serviceTypes, Type implementationType)
         {
             services.AddSingleton(implementationType);
-            services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IHostedService), (s) => s.GetRequiredService(implementationType)));
+            var typeF = typeof(Func<,>).MakeGenericType(typeof(IServiceProvider), implementationType);
+            var method = typeof(ServiceDescriptor).GetMethods().First(x => x.Name == nameof(ServiceDescriptor.Singleton) && x.IsGenericMethod && x.GetParameters().Length == 1).MakeGenericMethod([typeof(IHostedService), implementationType]);
+            var methodGet = typeof(ServiceProviderServiceExtensions).GetMethods().First(x => x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService) && x.IsGenericMethod).MakeGenericMethod(implementationType);
+            ServiceDescriptor descriptor = (ServiceDescriptor)method.Invoke(null, [methodGet.CreateDelegate(typeF)])!;
+            services.TryAddEnumerable(descriptor);
             foreach (var type in serviceTypes)
             {
                 if (type == implementationType) continue;
