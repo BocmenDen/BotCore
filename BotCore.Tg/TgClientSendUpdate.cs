@@ -131,15 +131,23 @@ namespace BotCore.Tg
                 using var file = await send.Medias![0].GetFile();
                 var inputMedia = (file.GetAlbumInputMedia() as InputMedia)!;
                 inputMedia.Caption = send.Message;
+                inputMedia.ParseMode = send.TgGetParseMode();
                 message = (await BotClient.EditMessageMedia(chatId, limitsInfo.LastMessage!.MessagesMediaGroup![0], inputMedia, replyMarkup: send.Inline.CreateInline())).Id;
+                send[TgClient.KeyMessagesToEdit] = new LastMessageInfo()
+                {
+                    MessagesMediaGroup = [message],
+                    IsInline = limitsInfo.IsInline
+                };
             }
             else
-                message = (await BotClient.EditMessageText(chatId, limitsInfo.LastMessage!.Messages![0], send.Message!, replyMarkup: send.Inline.CreateInline(), parseMode: send.TgGetParseMode())).Id;
-            send[TgClient.KeyMessagesToEdit] = new LastMessageInfo()
             {
-                Messages = [message],
-                IsInline = limitsInfo.IsInline
-            };
+                message = (await BotClient.EditMessageText(chatId, limitsInfo.LastMessage!.Messages![0], send.Message!, replyMarkup: send.Inline.CreateInline(), parseMode: send.TgGetParseMode())).Id;
+                send[TgClient.KeyMessagesToEdit] = new LastMessageInfo()
+                {
+                    Messages = [message],
+                    IsInline = limitsInfo.IsInline
+                };
+            }
         }
     }
 }

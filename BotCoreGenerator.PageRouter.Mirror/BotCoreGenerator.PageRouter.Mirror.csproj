@@ -16,14 +16,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="GenerateModelMirrorAttribute.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="bin\Release\netstandard2.0\\BotCoreGenerator.PageRouter.Mirror.dll" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<EmbeddedResource Include="GenerateModelMirrorAttribute.cs">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</EmbeddedResource>

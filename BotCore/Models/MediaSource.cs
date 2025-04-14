@@ -11,6 +11,7 @@
         private readonly Func<Task<Stream>> _getStream;
 
         public string? Uri { get; private set; }
+        public string? PathFile { get; private set; }
 
         public MediaSource(Func<Task<Stream>> getStream, CollectionBotParameters? parameters = null) : base(parameters)
             => _getStream = getStream;
@@ -31,5 +32,21 @@
                 Uri = uri
             };
         }
+
+        public static MediaSource FromFile(string filePath)
+        {
+            filePath = Path.GetFullPath(filePath);
+            return new MediaSource(() =>
+            {
+                Stream stream = File.OpenRead(filePath);
+                return Task.FromResult<Stream>(stream);
+            })
+            {
+                Type = Path.GetExtension(filePath).Replace(".", string.Empty).Trim(),
+                Name = Path.GetFileName(filePath),
+                PathFile = filePath
+            };
+        }
+
     }
 }

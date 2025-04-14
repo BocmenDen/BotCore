@@ -1,5 +1,6 @@
 ﻿using BotCore.Models;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -9,18 +10,28 @@ namespace BotCore.Tg
     {
         public event Func<UpdateContext<TUser>, Task>? Update;
 
+        private readonly ConcurrentDictionary<string, List<Update>> _mediaGroupCache = [];
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _mediaGroupTimeouts = [];
+        private readonly TimeSpan MediaGroupDelay = TimeSpan.FromSeconds(1.5);
+
         private partial Task SendMessage(SendModel sendModel, Chat chatId);
 
         private partial async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             if (Update is null) return;
+            if (update.Message?.MediaGroupId is not null)
+            {
+                HandleMediaGroup(update);
+                return;
+            }
             UpdateType flags = update.Type switch
             {
                 Telegram.Bot.Types.Enums.UpdateType.CallbackQuery => UpdateType.Inline,
                 _ => UpdateType.None
             };
-            var chatId = update.GetChatId(); if (chatId is null) return;
-            var (user, isNewUser) = await _database.GetOrCreate(chatId); if (isNewUser) _logger?.LogInformation("Добавлен новый пользователь [{userTg}]", user);
+            var entity = await GetOrCreateUser(update);
+            if (entity == null) return;
+            var (user, chatId) = entity.Value;
             var textMessage = update.Message?.Text ?? update.Message?.Caption;
             (var command, textMessage) = textMessage.ParseCommand();
             if (!string.IsNullOrWhiteSpace(command)) flags |= UpdateType.Command;
@@ -37,6 +48,65 @@ namespace BotCore.Tg
             };
 
             await Update(new UpdateContext<TUser>(this, user, updateModel, (sendModel) => SendMessage(sendModel, chatId)));
+        }
+
+        private void HandleMediaGroup(Update update)
+        {
+            var groupId = update.Message!.MediaGroupId!;
+            if (_mediaGroupTimeouts.TryRemove(groupId, out var token))
+            {
+                token.Cancel();
+            }
+            List<Update> updateList;
+            if (!_mediaGroupCache.TryGetValue(groupId, out updateList!))
+            {
+                updateList = [];
+                _mediaGroupCache[groupId] = updateList;
+            }
+            updateList.Add(update);
+            token = new CancellationTokenSource();
+            _mediaGroupTimeouts[groupId] = token;
+            _ = Task.Factory.StartNew(async () =>
+            {
+                var delayTask = Task.Delay(MediaGroupDelay);
+                var cancelTask = Task.Delay(Timeout.Infinite, token.Token);
+                var completed = await Task.WhenAny(delayTask, cancelTask);
+                if (completed == cancelTask) return;
+                if (_mediaGroupCache.TryRemove(groupId, out var updates))
+                    await CombineMediaGroups(updates);
+            });
+        }
+
+        private async Task CombineMediaGroups(List<Update> updates)
+        {
+            if (Update == null) return;
+            var updateLast = updates.Last();
+            var entity = await GetOrCreateUser(updateLast);
+            if (entity == null) return;
+            var (user, chatId) = entity.Value;
+            List<MediaSource> medias = [];
+            foreach (var item in updates)
+            {
+                var media = ParseMedia(item);
+                if(media is not null)
+                    medias.AddRange(media);
+            }
+
+            var updateModel = new UpdateModel()
+            {
+                UpdateType = UpdateType.Media,
+                Medias = medias,
+                OriginalMessage = updateLast
+            };
+
+            await Update(new UpdateContext<TUser>(this, user, updateModel, (sendModel) => SendMessage(sendModel, chatId)));
+        }
+
+        private async Task<(TUser, Chat)?> GetOrCreateUser(Update update)
+        {
+            var chatId = update.GetChatId(); if (chatId is null) return null;
+            var (user, isNewUser) = await _database.GetOrCreate(chatId); if (isNewUser) _logger?.LogInformation("Добавлен новый пользователь [{userTg}]", user);
+            return (user, chatId);
         }
 
         /// <summary>
@@ -58,7 +128,7 @@ namespace BotCore.Tg
                     return streamWriter;
                 }, new() { { TgClient.KeyMediaSourceFileId, fileId } })
                 {
-                    Name = fileName,
+                    Name = Path.GetFileNameWithoutExtension(fileName),
                     Type = Path.GetExtension(fileName)?.Replace(".", string.Empty),
                     MimeType = mimeType,
                     Id = fileId
