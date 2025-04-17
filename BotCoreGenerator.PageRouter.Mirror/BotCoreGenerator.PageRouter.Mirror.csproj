@@ -17,7 +17,7 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="GenerateModelMirrorAttribute.cs">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</EmbeddedResource>
 	</ItemGroup>
 

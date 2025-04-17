@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace BotCoreGenerator.PageRouter.Mirror
 {
@@ -47,23 +48,46 @@ namespace BotCoreGenerator.PageRouter.Mirror
             {
                 var interfaceFullName = $"{Consts.InterfaceBindStorageModel}<{modelFullName}>";
                 var storageModelFullName = $"{Consts.ModelStorageModel}<{modelFullName}>";
+
                 pageCode.AppendLine($"{pageInfo.Modifier} partial class {pageInfo.NamePageAddedGeneric}: {interfaceFullName}");
                 pageCode.OpenScope();
                 {
-                    pageCode.AppendLine($"protected {storageModelFullName} {Consts.NameModel};");
+                    var nameTempVarableIsSave = $"__{pageInfo.NamePage}IsSaveModel";
+                    pageCode.AppendLine($"private bool {nameTempVarableIsSave} = false;");
+                    pageCode.AppendLine($"protected {storageModelFullName} {pageInfo.NameModelProperty};");
                     pageCode.AppendLine($"void {interfaceFullName}.{Consts.MethodNameBindStorageModel}({storageModelFullName} {Consts.NameVarTmp})");
                     pageCode.OpenScope();
                     {
-                        pageCode.AppendLine($"this.{Consts.NameModel} = {Consts.NameVarTmp};");
+                        pageCode.AppendLine($"this.{pageInfo.NameModelProperty} = {Consts.NameVarTmp};");
                     }
                     pageCode.CloseScope();
+
+                    pageCode.AppendLine($"protected async {typeof(Task).FullName} {Consts.NameSaveModelMethod}()");
+                    pageCode.OpenScope();
+                    {
+                        pageCode.AppendLine($"if({nameTempVarableIsSave})");
+                        pageCode.OpenScope();
+                        {
+                            pageCode.AppendLine($"await {pageInfo.NameModelProperty}.Save();");
+                            pageCode.AppendLine($"this.{nameTempVarableIsSave} = false;");
+                        }
+                        pageCode.CloseScope();
+                    }
+                    pageCode.CloseScope();
+
                     foreach (var field in pageInfo.Fields)
                     {
                         pageCode.AppendLine($"{field.Modifier} partial {field.Type} {field.Name}");
                         pageCode.OpenScope();
                         {
-                            pageCode.AppendLine($"get => this.{Consts.NameModel}.Value.{field.Name};");
-                            pageCode.AppendLine($"set => this.{Consts.NameModel}.Value.{field.Name} = value;");
+                            pageCode.AppendLine($"get => this.{pageInfo.NameModelProperty}.Value.{field.Name};");
+                            pageCode.AppendLine("set");
+                            pageCode.OpenScope();
+                            {
+                                pageCode.AppendLine($"this.{pageInfo.NameModelProperty}.Value.{field.Name} = value;");
+                                pageCode.AppendLine($"this.{nameTempVarableIsSave} = true;");
+                            }
+                            pageCode.CloseScope();
                         }
                         pageCode.CloseScope();
                     }
@@ -76,8 +100,8 @@ namespace BotCoreGenerator.PageRouter.Mirror
 
         private static void GenerateModel(PageInfo pageInfo, out HelpBuilderCode modelCode, out string modelName)
         {
-            modelCode =new HelpBuilderCode();
-            modelName =Utils.GenerateNameModel(pageInfo);
+            modelCode = new HelpBuilderCode();
+            modelName = Utils.GenerateNameModel(pageInfo);
             modelCode.AppendLine($"namespace {Consts.Namespace}");
             modelCode.OpenScope();
             {

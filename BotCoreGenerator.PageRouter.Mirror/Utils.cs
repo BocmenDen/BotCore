@@ -54,21 +54,19 @@ namespace BotCoreGenerator.PageRouter.Mirror
             if (!(context.Node is ClassDeclarationSyntax classSyntax))
                 return null;
 
-            // Получаем символ класса
             if (!(context.SemanticModel.GetDeclaredSymbol(classSyntax) is INamedTypeSymbol classSymbol))
                 return null;
 
-            // Находим тип атрибута через компиляцию
             var mirrorAttributeType = context.SemanticModel.Compilation
                 .GetTypeByMetadataName(Consts.AttributeFullNamespace);
             if (mirrorAttributeType == null)
                 return null;
 
-            // Проверяем, применён ли атрибут к классу
-            if (!classSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, mirrorAttributeType)))
+            var attr = classSymbol.GetAttributes().FirstOrDefault(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, mirrorAttributeType));
+
+            if (attr is null)
                 return null;
 
-            // Считываем информацию о классе
             var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
             var className = classSymbol.Name;
             var classNameAddGenericArgs = className;
@@ -79,7 +77,6 @@ namespace BotCoreGenerator.PageRouter.Mirror
             }
             var modifier = GetAccessModifier(classSymbol.DeclaredAccessibility);
 
-            // Собираем список полей и свойств
             var fields = classSymbol
                 .GetMembers()
                 .Where(m => (m is IPropertySymbol prop && !prop.IsStatic && prop.IsPartialDefinition))
@@ -87,7 +84,7 @@ namespace BotCoreGenerator.PageRouter.Mirror
                 .Select(m => new NodeField
                 {
                     Name = m.Name,
-                    Type = m.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) ?? "unknown",
+                    Type = m.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                     Modifier = GetAccessModifier(m.DeclaredAccessibility),
                 })
                 .ToList();
@@ -98,7 +95,8 @@ namespace BotCoreGenerator.PageRouter.Mirror
                 NameSpacePage = namespaceName,
                 Modifier = modifier,
                 Fields = fields,
-                NamePageAddedGeneric = classNameAddGenericArgs
+                NamePageAddedGeneric = classNameAddGenericArgs,
+                NameModelProperty = attr.ConstructorArguments[0].Value?.ToString(),
             };
         }
 

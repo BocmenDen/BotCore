@@ -8,6 +8,7 @@ namespace BotCoreGenerator.PageRouter.Mirror
         public string NamePageAddedGeneric;
         public string NameSpacePage;
         public string Modifier;
+        public string NameModelProperty;
         public IReadOnlyList<NodeField> Fields;
     }
     internal struct NodeField
