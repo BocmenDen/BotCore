@@ -27,11 +27,11 @@ namespace BotCore.Tg
 
         private async Task SendNewMessage(SendModel send, Chat chatId, SendingMessageInfo sendingMessageInfo)
         {
-            await DeleteOldMessage(chatId, sendingMessageInfo);
             if (sendingMessageInfo.IsMedia)
                 await SendNewMessageIfMedia(send, chatId, sendingMessageInfo);
             else
                 await SendNewMessageIfNoMedia(send, chatId, sendingMessageInfo);
+            await DeleteOldMessage(chatId, sendingMessageInfo);
         }
 
         private async Task SendNewMessageIfNoMedia(SendModel send, Chat chatId, SendingMessageInfo sendingMessageInfo)
